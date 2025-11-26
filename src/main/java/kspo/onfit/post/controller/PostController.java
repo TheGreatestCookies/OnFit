@@ -1,5 +1,7 @@
 package kspo.onfit.post.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import kspo.onfit.post.dto.PostRequestDto;
@@ -23,11 +25,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/api/posts")
+@Tag(name = "Post API", description = "PreSignedUrl 발급을 위한 API")
 public class PostController {
 
     private final PostService postService;
 
     @PostMapping
+    @Operation(summary = "게시글 작성")
     public ResponseEntity<Void> createPost(
             @Valid @RequestBody PostRequestDto postRequestDto
     ){
@@ -36,6 +40,7 @@ public class PostController {
     }
 
     @GetMapping
+    @Operation(summary = "모든 게시글 조회")
     public ResponseEntity<Page<PostResponseDto>> getAllPost(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
@@ -49,6 +54,7 @@ public class PostController {
     }
 
     @PatchMapping("/{postId}")
+    @Operation(summary = "게시글 수정")
     public ResponseEntity<Long> updatePost(
             @PathVariable Long postId,
             @RequestBody PostUpdateDto postUpdateDto
@@ -58,6 +64,7 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}")
+    @Operation(summary = "모든 게시글 삭제")
     public ResponseEntity<Void> deletePost(
             @PathVariable Long postId
     ){
