@@ -17,7 +17,7 @@ public interface ImageFileRepository extends JpaRepository<ImageFile, Long> {
     @Query("delete from ImageFile i where i.postId =:postId")
     void removeImageFileByPostId(Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from ImageFile i where i.url in :urls")
     void deleteImageFilesByUrls(List<String> urls);
 

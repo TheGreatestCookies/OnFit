@@ -51,7 +51,7 @@ public class S3Service {
     private Date getPreSignedExpiration(){
         Date expiration = new Date();
         long expTimeMillis = expiration.getTime();
-        expTimeMillis += (1000 * 60) * 2; // 유효 시간 2분
+        expTimeMillis += (1000 * 60) * 5; // 유효 시간 5분
         expiration.setTime(expTimeMillis);
         return expiration;
     }
