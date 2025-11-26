@@ -1,4 +1,4 @@
-package kspo.onfit.imageUpload.dto;
+package kspo.onfit.imageFile.dto;
 
 public record PreSignedResponseDto(
         String preSignedUrl
