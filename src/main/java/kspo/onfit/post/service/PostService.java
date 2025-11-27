@@ -13,6 +13,7 @@ import kspo.onfit.imageFile.service.S3Service;
 import kspo.onfit.member.domain.Member;
 import kspo.onfit.member.service.MemberLowService;
 import kspo.onfit.post.domain.Post;
+import kspo.onfit.post.dto.MyPostResponseDto;
 import kspo.onfit.post.dto.PostRequestDto;
 import kspo.onfit.post.dto.PostResponseDto;
 import kspo.onfit.post.dto.PostUpdateDto;
@@ -51,10 +52,10 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostResponseDto> getMyPosts(Long memberId, Pageable pageable){
+    public Page<MyPostResponseDto> getMyPosts(Long memberId, Pageable pageable){
         Page<Post> posts =  postLowService.findMyPostsByMemberId(memberId, pageable);
         Map<Long, List<String>> postImages = getPostsImages(posts);
-        return posts.map(post -> new PostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
+        return posts.map(post -> new MyPostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
     }
 
     @Transactional(readOnly = true)

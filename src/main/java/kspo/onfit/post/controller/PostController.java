@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
+import kspo.onfit.post.dto.MyPostResponseDto;
 import kspo.onfit.post.dto.PostRequestDto;
 import kspo.onfit.post.dto.PostResponseDto;
 import kspo.onfit.post.dto.PostUpdateDto;
@@ -51,12 +52,12 @@ public class PostController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<Page<PostResponseDto>> getMyPost(
+    public ResponseEntity<Page<MyPostResponseDto>> getMyPost(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ){
         Long memberId = 2L;
-        Page<PostResponseDto> postResponseDtos = postService.getMyPosts(memberId, PageRequest.of(page, size));
+        Page<MyPostResponseDto> postResponseDtos = postService.getMyPosts(memberId, PageRequest.of(page, size));
         return ResponseEntity.ok(postResponseDtos);
     }
 
