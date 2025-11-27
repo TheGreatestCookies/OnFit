@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import kspo.onfit.global.Exception.BadRequestException;
 import kspo.onfit.global.Exception.ExceptionCode;
-import kspo.onfit.global.Exception.ForbiddenException;
 import kspo.onfit.imageFile.domain.ImageFile;
 import kspo.onfit.imageFile.service.ImageFileService;
 import kspo.onfit.imageFile.service.S3Service;
@@ -47,20 +46,14 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostResponseDto> getAllPost(Pageable pageable){
         Page<Post> posts =  postLowService.findAllByOrderByCreatedAtDesc(pageable);
-        List<Long> postIds = posts.getContent().stream()
-                .map(post -> post.getId())
-                .toList();
-        Map<Long, List<String>> postImages = getPostsImages(postIds);
+        Map<Long, List<String>> postImages = getPostsImages(posts);
         return posts.map(post -> new PostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
     }
 
     @Transactional(readOnly = true)
     public Page<PostResponseDto> getMyPosts(Long memberId, Pageable pageable){
         Page<Post> posts =  postLowService.findMyPostsByMemberId(memberId, pageable);
-        List<Long> postIds = posts.getContent().stream()
-                .map(post -> post.getId())
-                .toList();
-        Map<Long, List<String>> postImages = getPostsImages(postIds);
+        Map<Long, List<String>> postImages = getPostsImages(posts);
         return posts.map(post -> new PostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
     }
 
@@ -100,14 +93,17 @@ public class PostService {
 
     public void removePost(Long id, Long memberId){
         Post post = postLowService.findPostByIdAndMemberId(id, memberId);
-
         List<String> imageUrls = imageFileService.getImagesByPostId(id);
         imageFileService.deleteImageFiles(id);
         postLowService.removePostById(id);
         s3Service.deleteImageFiles(imageUrls);
     }
 
-    private Map<Long, List<String>> getPostsImages(List<Long> postIds){
+    private Map<Long, List<String>> getPostsImages(Page<Post> posts){
+        List<Long> postIds = posts.getContent().stream()
+                .map(post -> post.getId())
+                .toList();
+
         Map<Long, List<String>> postImages = new HashMap<>();
         List<ImageFile> imageFileList = imageFileService.getImagesByPostIds(postIds);
         for(ImageFile imageFile : imageFileList){

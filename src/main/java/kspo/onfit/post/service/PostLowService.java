@@ -1,7 +1,6 @@
 package kspo.onfit.post.service;
 
 import java.time.LocalDateTime;
-import kspo.onfit.global.Exception.BadRequestException;
 import kspo.onfit.global.Exception.ExceptionCode;
 import kspo.onfit.global.Exception.ForbiddenException;
 import kspo.onfit.post.domain.Post;

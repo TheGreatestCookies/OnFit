@@ -76,7 +76,7 @@ public class PostController {
     public ResponseEntity<Void> deletePost(
             @PathVariable Long postId
     ){
-        Long memberId = 2L;
+        Long memberId = 2L; // temp
         postService.removePost(postId, memberId);
         return ResponseEntity.noContent().build();
     }
