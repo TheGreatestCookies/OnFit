@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>게시글 CRUD + 이미지 업로드 테스트</title>
+  <style>
+    :root{--bg:#f0f2f5;--card-bg:#ffffff;--card-elevated:#ffffff;--border:#dadde1;--border-soft:#e4e6eb;--primary:#0095f6;--primary-soft:#e3f3ff;--text-main:#262626;--text-sub:#8e8e8e;--danger:#ed4956}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;margin:0;padding:24px 0 40px;background:var(--bg);color:var(--text-main);display:flex;justify-content:center}
+    .page{width:100%;max-width:1040px;padding:0 16px}
+    .top-nav{position:sticky;top:0;z-index:10;height:60px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:10px 16px;border-radius:12px;background:#fff;border:1px solid rgba(0,0,0,.03);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-logo{width:34px;height:34px;border-radius:10px;background:conic-gradient(from 200deg,#feda77,#f58529,#dd2a7b,#8134af,#515bd4,#feda77);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800}
+    .brand-logo span{background:rgba(0,0,0,.25);padding:4px 6px;border-radius:999px;font-size:13px}
+    .brand-text-main{font-family:"SF Pro Display",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:20px;font-weight:700;letter-spacing:.02em}
+    .brand-text-sub{margin-top:2px;font-size:11px;color:var(--text-sub)}
+    .user-circle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border-soft);background:#f5f6f7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-main)}
+    .layout{margin-top:18px;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1.4fr);gap:20px;align-items:flex-start}
+    @media(max-width:900px){body{padding-top:12px}.top-nav{position:static;border-radius:0}.layout{grid-template-columns:minmax(0,1fr)}}
+    .card{background:var(--card-bg);border:1px solid var(--border-soft);border-radius:16px;padding:16px 16px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+    .posts-card{background:var(--card-elevated)}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .card-title{font-size:15px;font-weight:600}
+    .badge-editing{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;font-size:11px;color:var(--danger);border-radius:999px;border:1px solid rgba(237,73,86,.3);background:rgba(237,73,86,.06)}
+    .badge-editing::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--danger)}
+    label{font-weight:500;font-size:12px;display:block;margin-bottom:4px;color:var(--text-sub)}
+    textarea{width:100%;min-height:120px;resize:vertical;padding:9px 10px;border-radius:10px;border:1px solid var(--border-soft);font-size:14px;outline:none;background:#fafafa;color:var(--text-main)}
+    textarea::placeholder{color:#b0b0b0}
+    textarea:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 1px rgba(0,149,246,.15)}
+    input[type="file"]{margin-top:6px;font-size:11px;color:var(--text-sub)}
+    .btn-row{margin-top:12px;display:flex;gap:8px;justify-content:flex-end}
+    button{border-radius:999px;border:none;font-size:13px;font-weight:500;padding:8px 16px;cursor:pointer;transition:background .12s ease,transform .05s ease,box-shadow .1s ease,opacity .12s ease}
+    button:active{transform:translateY(1px);box-shadow:none}
+    #submitBtn{background:var(--primary);color:#fff;box-shadow:0 2px 6px rgba(0,149,246,.4)}
+    #submitBtn:hover{background:#0081d7}
+    #resetBtn{background:#f0f2f5;color:var(--text-main);border:1px solid var(--border-soft)}
+    #resetBtn:hover{background:#e4e6eb}
+    .preview-title{margin-top:16px;font-size:12px;font-weight:500;color:var(--text-sub)}
+    .preview{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+    .image-item{position:relative;display:inline-block}
+    .preview img{width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--border-soft)}
+    .remove-btn{position:absolute;top:-6px;right:-6px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .url-box-label{margin-top:12px;font-size:11px;color:var(--text-sub)}
+    .url-list{margin-top:4px;font-size:11px;white-space:pre-line;background:#f8f9fa;padding:8px;border-radius:10px;border:1px dashed var(--border-soft);max-height:90px;overflow-y:auto;color:var(--text-sub)}
+    .log{margin-top:10px;font-size:11px;white-space:pre-line;background:#050505;color:#f5f5f5;padding:8px;border-radius:10px;max-height:120px;overflow-y:auto;font-family:ui-monospace,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .posts-section{display:flex;flex-direction:column;gap:12px}
+    .posts-section-header{display:flex;align-items:center;justify-content:space-between}
+    .posts-section-header h2{margin:0;font-size:15px;font-weight:600}
+    .post-list{display:flex;flex-direction:column;gap:16px;margin-top:6px}
+    .post-card{border-radius:16px;border:1px solid var(--border-soft);padding:12px 14px 14px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);transition:box-shadow .12s ease,transform .05s ease}
+    .post-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px)}
+    .post-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .post-id{font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px}
+    .post-id::before{content:'';width:28px;height:28px;border-radius:50%;background:#f0f2f5}
+    .post-time{font-size:11px;color:var(--text-sub)}
+    .post-content{margin:4px 0 6px;font-size:14px;white-space:pre-wrap;line-height:1.5}
+    .post-images{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-top:8px}
+    .post-images img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:1px solid var(--border-soft)}
+    .card-actions{margin-top:10px;display:flex;gap:8px;justify-content:flex-end}
+    .card-actions button{margin-top:0;font-size:12px;padding:5px 12px}
+    .card-actions .secondary{background:#f0f2f5;border:1px solid var(--border-soft);color:var(--text-main)}
+    .card-actions .secondary:hover{background:#e4e6eb}
+    .card-actions .danger{background:#fff5f6;border:1px solid rgba(237,73,86,.4);color:var(--danger)}
+    .card-actions .danger:hover{background:#ffe7ea}
+    .pagination{margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-sub)}
+    .pagination button{margin-top:0;padding:4px 10px;font-size:11px;border-radius:999px;border:1px solid var(--border-soft);background:#f0f2f5;color:var(--text-main)}
+    .pagination button:hover:not(:disabled){background:#e4e6eb}
+    .pagination button:disabled{opacity:.5;cursor:default}
+    .empty-text{margin-top:6px;font-size:12px;color:var(--text-sub);text-align:center}
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="top-nav">
+    <div class="brand">
+      <div class="brand-logo"><span>🍪</span></div>
+      <div>
+        <div class="brand-text-main">The Greatest Cookies</div>
+        <div class="brand-text-sub">Simple feed · S3 image test</div>
+      </div>
+    </div>
+    <div class="user-circle">You</div>
+  </header>
+  <div class="layout">
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">게시글 작성 / 수정</div>
+        <span id="modeBadge" class="badge-editing" style="display:none;">수정 모드</span>
+      </div>
+      <div>
+        <label for="content">게시글 내용</label>
+        <textarea id="content" placeholder="지금 무슨 생각을 하고 있나요? (10~200자)"></textarea>
+      </div>
+      <div style="margin-top:12px;">
+        <label for="images">이미지 선택 (최대 10장)</label>
+        <input id="images" type="file" accept="image/*" multiple />
+      </div>
+      <div class="btn-row">
+        <button id="resetBtn" class="secondary">새 글 작성</button>
+        <button id="submitBtn">게시글 등록</button>
+      </div>
+      <div class="preview-title">현재 폼 이미지 미리보기</div>
+      <div class="preview" id="preview"></div>
+      <div class="url-box-label">현재 imagesUrls (서버로 전송될 값)</div>
+      <div class="url-list" id="urlList"></div>
+      <div class="url-box-label">로그</div>
+      <div class="log" id="log"></div>
+    </section>
+    <section class="posts-section">
+      <div class="card posts-card">
+        <div class="card-header posts-section-header">
+          <h2>작성된 게시글</h2>
+        </div>
+        <div class="post-list" id="postList"></div>
+        <div class="empty-text" id="emptyText" style="display:none;">등록된 게시글이 없습니다.</div>
+        <div class="pagination" id="pagination" style="display:none;">
+          <button id="prevPageBtn">&lt; 이전</button>
+          <div id="pageInfo"></div>
+          <button id="nextPageBtn">다음 &gt;</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+  const submitBtn=document.getElementById("submitBtn");
+  const resetBtn=document.getElementById("resetBtn");
+  const previewEl=document.getElementById("preview");
+  const urlListEl=document.getElementById("urlList");
+  const logEl=document.getElementById("log");
+  const modeBadgeEl=document.getElementById("modeBadge");
+  const postListEl=document.getElementById("postList");
+  const emptyTextEl=document.getElementById("emptyText");
+  const paginationEl=document.getElementById("pagination");
+  const prevPageBtn=document.getElementById("prevPageBtn");
+  const nextPageBtn=document.getElementById("nextPageBtn");
+  const pageInfoEl=document.getElementById("pageInfo");
+  let currentPage=0;
+  const pageSize=5;
+  let currentImageUrls=[];
+  let editingPostId=null;
+  function log(msg){console.log(msg);logEl.textContent+=msg+"\n";logEl.scrollTop=logEl.scrollHeight}
+  function setCreateMode(){editingPostId=null;document.getElementById("content").value="";currentImageUrls=[];document.getElementById("images").value="";renderCurrentImages();submitBtn.textContent="게시글 등록";modeBadgeEl.style.display="none"}
+  function setEditMode(post){editingPostId=post.id;document.getElementById("content").value=post.content||"";currentImageUrls=Array.isArray(post.imageUrls)?[...post.imageUrls]:[];document.getElementById("images").value="";renderCurrentImages();submitBtn.textContent=`게시글 수정 (#${post.id})`;modeBadgeEl.style.display="inline-flex"}
+  async function getPreSignedUrl(){const res=await fetch("/s3");if(!res.ok)throw new Error("GET /s3 실패: "+res.status);const data=await res.json();log("[/s3 응답] "+JSON.stringify(data));let presignedUrl=data.presignedUrl??data.preSignedUrl??data.url??data.uploadUrl??null;if(!presignedUrl){const values=Object.values(data);for(const v of values){if(typeof v==="string"&&v.startsWith("http")){presignedUrl=v;break}}}if(!presignedUrl)throw new Error("응답에서 presigned URL을 찾지 못했습니다. /s3 JSON 구조를 확인하세요.");const fileUrl=data.fileUrl??data.publicUrl??presignedUrl.split("?")[0];return{presignedUrl,fileUrl}}
+  async function uploadToS3(file){const{presignedUrl,fileUrl}=await getPreSignedUrl();log(`presignedUrl 획득: ${presignedUrl}`);const res=await fetch(presignedUrl,{method:"PUT",headers:{"Content-Type":file.type},body:file});if(!res.ok){const text=await res.text();log(`S3 업로드 실패 응답: ${res.status} ${res.statusText}\n${text}`);throw new Error(`S3 업로드 실패: ${res.status} ${res.statusText}`)}const finalUrl=fileUrl||presignedUrl.split("?")[0];return finalUrl}
+  async function uploadSelectedFiles(files){for(const file of files){log(`이미지 업로드 시작: ${file.name}`);const url=await uploadToS3(file);log(`업로드 성공: ${url}`);currentImageUrls.push(url)}renderCurrentImages()}
+  function renderCurrentImages(){previewEl.innerHTML="";urlListEl.textContent="";if(!currentImageUrls||currentImageUrls.length===0)return;currentImageUrls.forEach((url,index)=>{const wrapper=document.createElement("div");wrapper.className="image-item";const img=document.createElement("img");img.src=url;img.alt=url;const btn=document.createElement("button");btn.className="remove-btn";btn.textContent="×";btn.addEventListener("click",()=>{currentImageUrls.splice(index,1);renderCurrentImages()});wrapper.appendChild(img);wrapper.appendChild(btn);previewEl.appendChild(wrapper)});urlListEl.textContent=currentImageUrls.join("\n")}
+  function renderPosts(data){postListEl.innerHTML="";if(!data||!Array.isArray(data.content)||data.content.length===0){emptyTextEl.style.display="block";paginationEl.style.display="none";return}emptyTextEl.style.display="none";paginationEl.style.display="flex";data.content.forEach(post=>{const card=document.createElement("div");card.className="post-card";const header=document.createElement("div");header.className="post-header";const idSpan=document.createElement("span");idSpan.className="post-id";idSpan.textContent=`#${post.id}`;const timeSpan=document.createElement("span");timeSpan.className="post-time";try{const date=new Date(post.createdTime);if(!isNaN(date.getTime()))timeSpan.textContent=date.toLocaleString();else timeSpan.textContent=post.createdTime}catch(e){timeSpan.textContent=post.createdTime}header.appendChild(idSpan);header.appendChild(timeSpan);const contentDiv=document.createElement("div");contentDiv.className="post-content";contentDiv.textContent=post.content;card.appendChild(header);card.appendChild(contentDiv);if(post.imageUrls&&post.imageUrls.length>0){const imagesDiv=document.createElement("div");imagesDiv.className="post-images";post.imageUrls.forEach(url=>{const img=document.createElement("img");img.src=url;img.alt=url;imagesDiv.appendChild(img)});card.appendChild(imagesDiv)}const actionsDiv=document.createElement("div");actionsDiv.className="card-actions";const editButton=document.createElement("button");editButton.textContent="수정";editButton.addEventListener("click",()=>{setEditMode(post);window.scrollTo({top:0,behavior:"smooth"})});const deleteButton=document.createElement("button");deleteButton.textContent="삭제";deleteButton.className="secondary danger";deleteButton.addEventListener("click",async()=>{if(!confirm(`정말로 #${post.id} 게시글을 삭제할까요?`))return;try{const res=await fetch(`/api/posts/${post.id}`,{method:"DELETE"});if(!res.ok&&res.status!==204){const text=await res.text();alert(`삭제 실패: ${res.status}\n${text}`);return}if(editingPostId===post.id)setCreateMode();window.location.reload()}catch(e){console.error(e);alert("삭제 중 에러가 발생했습니다.")}});actionsDiv.appendChild(editButton);actionsDiv.appendChild(deleteButton);card.appendChild(actionsDiv);postListEl.appendChild(card)});currentPage=data.number;pageInfoEl.textContent=`페이지 ${data.number+1} / ${data.totalPages} (총 ${data.totalElements}개)`;prevPageBtn.disabled=data.first;nextPageBtn.disabled=data.last}
+  async function fetchPosts(page=0){try{const res=await fetch(`/api/posts?page=${page}&size=${pageSize}`);if(!res.ok){const text=await res.text();console.error("GET /api/posts 실패:",res.status,text);return}const data=await res.json();renderPosts(data)}catch(e){console.error("게시글 목록 조회 에러:",e)}}
+  submitBtn.addEventListener("click",async()=>{logEl.textContent="";const content=document.getElementById("content").value.trim();const files=document.getElementById("images").files;if(!content||content.length<10||content.length>200){alert("포스트 내용은 10글자 이상 200글자 미만이어야 합니다.");return}if(currentImageUrls.length+files.length>10){alert("이미지는 최대 10장까지 업로드 가능합니다. (기존 + 새 업로드 합계)");return}try{if(files.length>0){await uploadSelectedFiles(files);document.getElementById("images").value=""}const body={content:content,imagesUrls:currentImageUrls};if(editingPostId==null){log("POST /api/posts 요청 시작");const res=await fetch("/api/posts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const resText=await res.text();if(!res.ok){log(`POST /api/posts 실패: ${res.status}\n${resText}`);alert("게시글 등록 실패. 로그를 확인해주세요.");return}log(`POST /api/posts 성공: ${res.status}\n${resText||"(빈 응답)"}`);alert("게시글이 성공적으로 등록되었습니다.");setCreateMode();fetchPosts(0)}else{log(`PATCH /api/posts/${editingPostId} 요청 시작`);const res=await fetch(`/api/posts/${editingPostId}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const resText=await res.text();if(!res.ok){log(`PATCH /api/posts/${editingPostId} 실패: ${res.status}\n${resText}`);alert("게시글 수정 실패. 로그를 확인해주세요.");return}log(`PATCH /api/posts/${editingPostId} 성공: ${res.status}\n${resText||"(빈 응답)"}`);alert("게시글이 성공적으로 수정되었습니다.");setCreateMode();fetchPosts(currentPage)}}catch(e){console.error(e);log("에러: "+e.message);alert("에러가 발생했습니다. 로그/콘솔을 확인해주세요.")}});
+  resetBtn.addEventListener("click",()=>{setCreateMode()});
+  prevPageBtn.addEventListener("click",()=>{if(currentPage>0)fetchPosts(currentPage-1)});
+  nextPageBtn.addEventListener("click",()=>{fetchPosts(currentPage+1)});
+  setCreateMode();
+  fetchPosts(0);
+</script>
+</body>
+</html>
