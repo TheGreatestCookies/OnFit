@@ -1,5 +1,9 @@
 package kspo.onfit.post.service;
 
+import java.time.LocalDateTime;
+import kspo.onfit.global.Exception.BadRequestException;
+import kspo.onfit.global.Exception.ExceptionCode;
+import kspo.onfit.global.Exception.ForbiddenException;
 import kspo.onfit.post.domain.Post;
 import kspo.onfit.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +25,17 @@ public class PostLowService {
         return postRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
-    public Post findPostById(Long id){
-        return postRepository.findPostById(id);
+    public Page<Post> findMyPostsByMemberId(Long memberId, Pageable pageable){
+        return postRepository.findPostsByMemberId(memberId, pageable);
+    }
+
+    public int findMyPostsByMemberIdAndDate(Long memberId, LocalDateTime today, LocalDateTime tomorrow){
+        return postRepository.countTodayPostByMemberId(memberId, today, tomorrow);
+    }
+
+    public Post findPostByIdAndMemberId(Long id, Long memberId){
+        return postRepository.findPostByIdAndMemberId(id, memberId)
+                .orElseThrow(() -> new ForbiddenException(ExceptionCode.POST_FORBIDDEN));
     }
 
     public void removePostById(Long id){

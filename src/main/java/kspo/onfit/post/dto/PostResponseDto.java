@@ -8,7 +8,11 @@ public record PostResponseDto(
         Long id,
         String content,
         LocalDateTime createdTime,
-        List<String> imageUrls
+        List<String> imageUrls,
+
+        Long userId,
+        String userName,
+        String profileImage
 )
 {
     public PostResponseDto(Post post, List<String> imageUrls){
@@ -16,7 +20,10 @@ public record PostResponseDto(
                 post.getId(),
                 post.getContent(),
                 post.getCreatedAt(),
-                imageUrls
+                imageUrls,
+                post.getMember().getId(),
+                post.getMember().getName(),
+                post.getMember().getProfileImage()
         );
     }
 }

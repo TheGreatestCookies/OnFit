@@ -35,7 +35,8 @@ public class PostController {
     public ResponseEntity<Void> createPost(
             @Valid @RequestBody PostRequestDto postRequestDto
     ){
-        Long id = postService.writePost(postRequestDto);
+        Long memberId = 2L; //temp
+        Long id = postService.writePost(postRequestDto, memberId);
         return ResponseEntity.created(URI.create(String.format("/api/post/%d", id))).build();
     }
 
@@ -50,7 +51,13 @@ public class PostController {
     }
 
     @GetMapping("/my")
-    public void getMyPost(){
+    public ResponseEntity<Page<PostResponseDto>> getMyPost(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ){
+        Long memberId = 2L;
+        Page<PostResponseDto> postResponseDtos = postService.getMyPosts(memberId, PageRequest.of(page, size));
+        return ResponseEntity.ok(postResponseDtos);
     }
 
     @PatchMapping("/{postId}")
@@ -59,7 +66,8 @@ public class PostController {
             @PathVariable Long postId,
             @RequestBody PostUpdateDto postUpdateDto
     ){
-        Long updatedPostId = postService.updatePost(postId, postUpdateDto);
+        Long memberId = 2L; // temp
+        Long updatedPostId = postService.updatePost(postId, memberId, postUpdateDto);
         return ResponseEntity.ok(updatedPostId);
     }
 
@@ -68,8 +76,20 @@ public class PostController {
     public ResponseEntity<Void> deletePost(
             @PathVariable Long postId
     ){
-        postService.removePost(postId);
+        Long memberId = 2L;
+        postService.removePost(postId, memberId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/check")
+    @Operation(summary = "오늘 작성한 글이 있는지 확인하는 메서드 - true : 글 작성 가능")
+    public ResponseEntity<Boolean> checkTodayPost(
+
+    ){
+        Long memberId = 2L;
+        Boolean check = postService.checkPosts(memberId);
+        return ResponseEntity.ok(check);
+    }
+
 
 }
