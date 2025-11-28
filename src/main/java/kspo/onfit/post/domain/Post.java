@@ -2,10 +2,14 @@ package kspo.onfit.post.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
+import kspo.onfit.member.domain.Member;
 import kspo.onfit.post.dto.PostRequestDto;
 import kspo.onfit.post.dto.PostUpdateDto;
 import lombok.Getter;
@@ -26,10 +30,13 @@ public class Post {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    //userId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
-    public Post(PostRequestDto postRequestDto){
+    public Post(PostRequestDto postRequestDto, Member member){
         this.content = postRequestDto.content();
+        this.member = member;
     }
 
     public void updateContent(PostUpdateDto updateDto){
