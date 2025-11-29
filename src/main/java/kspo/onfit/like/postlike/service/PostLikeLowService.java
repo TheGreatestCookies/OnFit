@@ -1,5 +1,6 @@
 package kspo.onfit.like.postlike.service;
 
+import java.util.List;
 import kspo.onfit.like.postlike.domain.PostLike;
 import kspo.onfit.like.postlike.repository.PostLikeRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,10 @@ public class PostLikeLowService {
 
     public Page<PostLike> findPostLikeByMemberId(Long memberId, Pageable pageable){
         return postLikeRepository.findPostLikeByMemberId(memberId, pageable);
+    }
+
+    public List<PostLike> findPostLikeByMemberId(Long memberId){
+        return postLikeRepository.findPostLikeByMemberId(memberId);
     }
 
     public void removePostLikeByPostIdAndMemberId(Long postId, Long memberId){

@@ -2,7 +2,6 @@ package kspo.onfit.like.postlike.service;
 
 import java.util.List;
 import java.util.Map;
-import kspo.onfit.global.Exception.BadRequestException;
 import kspo.onfit.global.Exception.EntityDuplicateException;
 import kspo.onfit.global.Exception.ExceptionCode;
 import kspo.onfit.like.postlike.domain.PostLike;
@@ -59,7 +58,15 @@ public class PostLikeService {
                 .toList();
 
         Map<Long, List<String>> postImages = postService.getPostsImages(postIds);
-        return postLikes.map(postLike -> new PostResponseDto(postLike, postImages.get(postLike.getPost().getId()), 10L));
+
+        return postLikes.map(postLike ->
+                new PostResponseDto(
+                        postLike,
+                        postImages.get(postLike.getPost().getId()),
+                        postService.countPostLikes(postLike.getPost().getId()),
+                        true
+                )
+        );
     }
     
 }

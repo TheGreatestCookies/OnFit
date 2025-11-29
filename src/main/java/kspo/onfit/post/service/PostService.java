@@ -15,7 +15,6 @@ import kspo.onfit.like.postlike.service.PostLikeLowService;
 import kspo.onfit.member.domain.Member;
 import kspo.onfit.member.service.MemberLowService;
 import kspo.onfit.post.domain.Post;
-import kspo.onfit.post.dto.MyPostResponseDto;
 import kspo.onfit.post.dto.PostRequestDto;
 import kspo.onfit.post.dto.PostResponseDto;
 import kspo.onfit.post.dto.PostUpdateDto;
@@ -58,27 +57,43 @@ public class PostService {
                 .toList();
 
         Map<Long, List<String>> postImages = getPostsImages(postIds);
-        //memberId == null ? false : checkMyLike(post.getId(), memberId),
+
+        List<Long> likedPost = postLikeLowService.findPostLikeByMemberId(memberId)
+                .stream()
+                .map(postLike -> postLike.getPost().getId())
+                .toList();
 
         return posts.map(
                 post ->
                         new PostResponseDto(
                                 post,
                                 postImages.getOrDefault(post.getId(), List.of()),
-                                countPostLikes(post.getId()))
+                                countPostLikes(post.getId()),
+                                likedPost.contains(post.getId())
+                        )
         );
     }
 
     @Transactional(readOnly = true)
-    public Page<MyPostResponseDto> getMyPosts(Long memberId, Pageable pageable){
+    public Page<PostResponseDto> getMyPosts(Long memberId, Pageable pageable){
         Page<Post> posts =  postLowService.findMyPostsByMemberId(memberId, pageable);
 
         List<Long> postIds = posts.getContent().stream()
                 .map(post -> post.getId())
                 .toList();
 
+        List<Long> likedPost = postLikeLowService.findPostLikeByMemberId(memberId)
+                .stream()
+                .map(postLike -> postLike.getPost().getId())
+                .toList();
+
         Map<Long, List<String>> postImages = getPostsImages(postIds);
-        return posts.map(post -> new MyPostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
+        return posts.map(post -> new PostResponseDto(
+                post,
+                postImages.getOrDefault(post.getId(), List.of()),
+                countPostLikes(post.getId()),
+                likedPost.contains(post.getId())
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -137,7 +152,7 @@ public class PostService {
         return postImages;
     }
 
-    private Long countPostLikes(Long postId) {
+    public Long countPostLikes(Long postId) {
         String key = String.format("post:%d:like_count", postId);
         Optional<String> cachedResult = redisUtil.select(key);
         if (cachedResult.isEmpty()) {
