@@ -132,6 +132,9 @@ public class PostService {
 
     public void removePost(Long id, Long memberId){
         Post post = postLowService.findPostByIdAndMemberId(id, memberId);
+        
+        postLikeLowService.removePostLikeByPostId(id);
+
         List<String> imageUrls = imageFileService.getImagesByPostId(id);
         imageFileService.deleteImageFiles(id);
         postLowService.removePostById(id);
