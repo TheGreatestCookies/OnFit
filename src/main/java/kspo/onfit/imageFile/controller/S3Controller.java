@@ -1,7 +1,6 @@
 package kspo.onfit.imageFile.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kspo.onfit.imageFile.dto.PreSignedResponseDto;
 import kspo.onfit.imageFile.service.S3Service;
