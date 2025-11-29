@@ -47,7 +47,8 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size
     ){
-        Page<PostResponseDto> postResponseDtos = postService.getAllPost(PageRequest.of(page, size));
+        Long memberId = 2L;
+        Page<PostResponseDto> postResponseDtos = postService.getAllPost(memberId, PageRequest.of(page, size));
         return ResponseEntity.ok(postResponseDtos);
     }
 

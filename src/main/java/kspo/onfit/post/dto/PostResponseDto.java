@@ -17,23 +17,29 @@ public record PostResponseDto(
         //author Info
         Long userId,
         String userName,
-        String profileImage
+        String profileImage,
+
+        //Boolean myLike,
+        Long like_cnt
 )
 {
-    public PostResponseDto(Post post, List<String> imageUrls){
+    public PostResponseDto(Post post, List<String> imageUrls, Long like_cnt){
         this(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
                 post.getCreatedAt(),
                 imageUrls,
+
                 post.getMember().getId(),
                 post.getMember().getName(),
-                post.getMember().getProfileImage()
+                post.getMember().getProfileImage(),
+
+                like_cnt
         );
     }
 
-    public PostResponseDto(PostLike postLike, List<String> imageUrls){
+    public PostResponseDto(PostLike postLike, List<String> imageUrls, Long like_cnt){
         this(
                 postLike.getPost().getId(),
                 postLike.getPost().getTitle(),
@@ -43,7 +49,9 @@ public record PostResponseDto(
 
                 postLike.getMember().getId(),
                 postLike.getMember().getName(),
-                postLike.getMember().getProfileImage()
+                postLike.getMember().getProfileImage(),
+
+                like_cnt
         );
     }
 }

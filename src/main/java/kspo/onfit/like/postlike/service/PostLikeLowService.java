@@ -29,4 +29,8 @@ public class PostLikeLowService {
         postLikeRepository.removeByPostIdAndMemberId(postId, memberId);
     }
 
+    public long countPostLike(Long postId){
+        return postLikeRepository.countPostLike(postId);
+    }
+
 }

@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import kspo.onfit.global.Exception.BadRequestException;
 import kspo.onfit.global.Exception.ExceptionCode;
 import kspo.onfit.imageFile.domain.ImageFile;
 import kspo.onfit.imageFile.service.ImageFileService;
 import kspo.onfit.imageFile.service.S3Service;
+import kspo.onfit.like.postlike.service.PostLikeLowService;
 import kspo.onfit.member.domain.Member;
 import kspo.onfit.member.service.MemberLowService;
 import kspo.onfit.post.domain.Post;
@@ -17,6 +19,7 @@ import kspo.onfit.post.dto.MyPostResponseDto;
 import kspo.onfit.post.dto.PostRequestDto;
 import kspo.onfit.post.dto.PostResponseDto;
 import kspo.onfit.post.dto.PostUpdateDto;
+import kspo.onfit.redis.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PostService {
 
+    private final RedisUtil redisUtil;
     private final PostLowService postLowService;
+    private final PostLikeLowService postLikeLowService;
     private final MemberLowService memberLowService;
     private final ImageFileService imageFileService;
     private final S3Service s3Service;
@@ -45,7 +50,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostResponseDto> getAllPost(Pageable pageable){
+    public Page<PostResponseDto> getAllPost(Long memberId, Pageable pageable){
         Page<Post> posts =  postLowService.findAllByOrderByCreatedAtDesc(pageable);
 
         List<Long> postIds = posts.getContent().stream()
@@ -53,7 +58,15 @@ public class PostService {
                 .toList();
 
         Map<Long, List<String>> postImages = getPostsImages(postIds);
-        return posts.map(post -> new PostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
+        //memberId == null ? false : checkMyLike(post.getId(), memberId),
+
+        return posts.map(
+                post ->
+                        new PostResponseDto(
+                                post,
+                                postImages.getOrDefault(post.getId(), List.of()),
+                                countPostLikes(post.getId()))
+        );
     }
 
     @Transactional(readOnly = true)
@@ -123,5 +136,18 @@ public class PostService {
         }
         return postImages;
     }
+
+    private Long countPostLikes(Long postId) {
+        String key = String.format("post:%d:like_count", postId);
+        Optional<String> cachedResult = redisUtil.select(key);
+        if (cachedResult.isEmpty()) {
+            //db에 직접 조회하고
+            Long value = postLikeLowService.countPostLike(postId);
+            redisUtil.insert(key, value.toString());
+            return value;
+        }
+        return Long.parseLong(cachedResult.get());
+    }
+
 
 }
