@@ -47,14 +47,24 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostResponseDto> getAllPost(Pageable pageable){
         Page<Post> posts =  postLowService.findAllByOrderByCreatedAtDesc(pageable);
-        Map<Long, List<String>> postImages = getPostsImages(posts);
+
+        List<Long> postIds = posts.getContent().stream()
+                .map(post -> post.getId())
+                .toList();
+
+        Map<Long, List<String>> postImages = getPostsImages(postIds);
         return posts.map(post -> new PostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
     }
 
     @Transactional(readOnly = true)
     public Page<MyPostResponseDto> getMyPosts(Long memberId, Pageable pageable){
         Page<Post> posts =  postLowService.findMyPostsByMemberId(memberId, pageable);
-        Map<Long, List<String>> postImages = getPostsImages(posts);
+
+        List<Long> postIds = posts.getContent().stream()
+                .map(post -> post.getId())
+                .toList();
+
+        Map<Long, List<String>> postImages = getPostsImages(postIds);
         return posts.map(post -> new MyPostResponseDto(post, postImages.getOrDefault(post.getId(), List.of())));
     }
 
@@ -100,11 +110,7 @@ public class PostService {
         s3Service.deleteImageFiles(imageUrls);
     }
 
-    private Map<Long, List<String>> getPostsImages(Page<Post> posts){
-        List<Long> postIds = posts.getContent().stream()
-                .map(post -> post.getId())
-                .toList();
-
+    public Map<Long, List<String>> getPostsImages(List<Long> postIds){
         Map<Long, List<String>> postImages = new HashMap<>();
         List<ImageFile> imageFileList = imageFileService.getImagesByPostIds(postIds);
         for(ImageFile imageFile : imageFileList){
@@ -117,6 +123,5 @@ public class PostService {
         }
         return postImages;
     }
-
 
 }

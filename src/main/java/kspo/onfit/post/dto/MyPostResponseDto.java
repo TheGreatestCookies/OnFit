@@ -6,6 +6,7 @@ import kspo.onfit.post.domain.Post;
 
 public record MyPostResponseDto(
         Long id,
+        String title,
         String content,
         LocalDateTime createdTime,
         List<String> imageUrls
@@ -14,6 +15,7 @@ public record MyPostResponseDto(
     public MyPostResponseDto(Post post, List<String> imageUrls){
         this(
                 post.getId(),
+                post.getTitle(),
                 post.getContent(),
                 post.getCreatedAt(),
                 imageUrls

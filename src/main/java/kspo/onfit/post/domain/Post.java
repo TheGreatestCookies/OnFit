@@ -25,6 +25,8 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
+    private String title;
+
     private String content;
 
     @CreatedDate
@@ -35,6 +37,7 @@ public class Post {
     private Member member;
 
     public Post(PostRequestDto postRequestDto, Member member){
+        this.title = postRequestDto.title();
         this.content = postRequestDto.content();
         this.member = member;
     }

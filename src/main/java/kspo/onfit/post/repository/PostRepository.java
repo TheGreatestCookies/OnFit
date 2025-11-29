@@ -25,4 +25,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("select count(p) from Post p where p.member.id =:id and p.createdAt >= :today and p.createdAt <:tomorrow")
     int countTodayPostByMemberId (Long id, LocalDateTime today, LocalDateTime tomorrow);
 
+    @Override
+    Post getReferenceById(Long id);
 }
