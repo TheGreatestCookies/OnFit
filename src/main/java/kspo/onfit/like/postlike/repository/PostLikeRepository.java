@@ -28,5 +28,8 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     @Query("select count(pl) from PostLike pl where pl.post.id = :postId")
     long countPostLike(Long postId);
 
+    @Query("select count(pl) from PostLike pl where pl.post.id in :postId")
+    List<Long> countPostLikebyPostIds(List<Long> postId);
+
 
 }

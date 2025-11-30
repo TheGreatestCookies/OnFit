@@ -22,12 +22,13 @@ public class PostLikeController {
 
     private final PostLikeService postLikeService;
 
+    private final Long memberId = 2L;
+
     //좋아요 누르기
     @PostMapping("/{postId}/like")
     public ResponseEntity<Void> createPostLike(
             @PathVariable Long postId
     ) {
-        Long memberId = 2L;
         Long savedId = postLikeService.createPostLike(postId, memberId);
         return ResponseEntity.created(URI.create(String.format("/api/post/%d/like/%d", postId, savedId))).build();
     }
@@ -37,7 +38,6 @@ public class PostLikeController {
     public ResponseEntity<Void> removePostLike(
             @PathVariable Long postId
     ) {
-        Long memberId = 2L;
         postLikeService.removePostLike(postId, memberId);
         return ResponseEntity.noContent().build();
     }
@@ -48,7 +48,6 @@ public class PostLikeController {
             @RequestParam(defaultValue = "5") int size
 
     ) {
-        Long memberId = 2L;
         Page<PostResponseDto> pagedList = postLikeService.getMyPostLikeList(memberId, PageRequest.of(page, size));
         return ResponseEntity.ok(pagedList);
     }

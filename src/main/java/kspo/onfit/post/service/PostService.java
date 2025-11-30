@@ -50,6 +50,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<PostResponseDto> getAllPost(Long memberId, Pageable pageable){
+
         Page<Post> posts =  postLowService.findAllByOrderByCreatedAtDesc(pageable);
 
         List<Long> postIds = posts.getContent().stream()
@@ -58,10 +59,15 @@ public class PostService {
 
         Map<Long, List<String>> postImages = getPostsImages(postIds);
 
-        List<Long> likedPost = postLikeLowService.findPostLikeByMemberId(memberId)
-                .stream()
-                .map(postLike -> postLike.getPost().getId())
-                .toList();
+        List<Long> likedPost;
+        if(memberId == null){
+            likedPost = List.of(); // 로그인을 수행하지 않은 경우
+        }
+        else{
+            likedPost = postLikeLowService.findPostLikeByMemberId(memberId)
+                    .stream().map(postLike -> postLike.getPost().getId())
+                    .toList();
+        }
 
         return posts.map(
                 post ->
@@ -132,7 +138,7 @@ public class PostService {
 
     public void removePost(Long id, Long memberId){
         Post post = postLowService.findPostByIdAndMemberId(id, memberId);
-        
+
         postLikeLowService.removePostLikeByPostId(id);
 
         List<String> imageUrls = imageFileService.getImagesByPostId(id);
