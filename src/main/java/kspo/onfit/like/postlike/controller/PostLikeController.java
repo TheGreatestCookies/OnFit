@@ -30,7 +30,7 @@ public class PostLikeController {
             @PathVariable Long postId
     ) {
         Long savedId = postLikeService.createPostLike(postId, memberId);
-        return ResponseEntity.created(URI.create(String.format("/api/post/%d/like/%d", postId, savedId))).build();
+        return ResponseEntity.created(URI.create(String.format("/api/posts/%d/like/%d", postId, savedId))).build();
     }
 
     //좋아요 삭제하기

@@ -38,7 +38,7 @@ public class PostController {
             @Valid @RequestBody PostRequestDto postRequestDto
     ){
         Long id = postService.writePost(postRequestDto, memberId);
-        return ResponseEntity.created(URI.create(String.format("/api/post/%d", id))).build();
+        return ResponseEntity.created(URI.create(String.format("/api/posts/%d", id))).build();
     }
 
     @GetMapping

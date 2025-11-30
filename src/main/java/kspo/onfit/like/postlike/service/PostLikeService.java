@@ -65,7 +65,7 @@ public class PostLikeService {
         return postLikes.map(postLike ->
                 new PostResponseDto(
                         postLike,
-                        postImages.get(postLike.getPost().getId()),
+                        postImages.getOrDefault(postLike.getPost().getId(), List.of()),
                         postService.countPostLikes(postLike.getPost().getId()),
                         true
                 )
