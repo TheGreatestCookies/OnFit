@@ -37,8 +37,11 @@ public class PostLikeService {
         Post post = postLowService.getReferenceById(postId);
         PostLike postLike = new PostLike(post, member);
         PostLike saved = postLikeLowService.save(postLike);
+
+        //기존 캐시 무효화
         String key = String.format("post:%d:like_count", postId);
         redisUtil.delete(key);
+
         return saved.getId();
     }
 
