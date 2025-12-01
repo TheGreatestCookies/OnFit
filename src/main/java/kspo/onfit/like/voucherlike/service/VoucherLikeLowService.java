@@ -34,5 +34,9 @@ public class VoucherLikeLowService {
         return voucherLikeRepository.findVoucherLikeByMemberId(memberId);
     }
 
+    public Long countVoucherLikeByVoucherId(Long voucherId){
+        return voucherLikeRepository.countVoucherLikeByVoucherId(voucherId);
+    }
+
 
 }

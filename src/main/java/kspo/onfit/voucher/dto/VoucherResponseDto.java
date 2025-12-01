@@ -20,10 +20,11 @@ public record VoucherResponseDto(
         Integer memberCount,
         Integer price,
 
+        Long likeCnt,
         Boolean myLike
 
 ){
-    public VoucherResponseDto(Voucher voucher, Boolean myLike){
+    public VoucherResponseDto(Voucher voucher, Long likeCnt, Boolean myLike){
         this(
                 voucher.getId(),
                 voucher.getName(),
@@ -41,6 +42,7 @@ public record VoucherResponseDto(
                 voucher.getMemberCount(),
                 voucher.getPrice(),
 
+                likeCnt,
                 myLike
         );
     }

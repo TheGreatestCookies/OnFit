@@ -21,5 +21,8 @@ public interface VoucherLikeRepository extends JpaRepository<VoucherLike, Long> 
 
     @Query("select vl from VoucherLike vl where vl.member.id = :memberId")
     List<VoucherLike> findVoucherLikeByMemberId(Long memberId);
+
+    @Query("select count(vl) from VoucherLike vl where vl.voucher.id = :voucherId")
+    Long countVoucherLikeByVoucherId(Long voucherId);
     
 }

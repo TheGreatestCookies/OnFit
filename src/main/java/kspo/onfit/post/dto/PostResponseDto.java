@@ -20,11 +20,11 @@ public record PostResponseDto(
         String profileImage,
 
         //Boolean myLike,
-        Long like_cnt,
+        Long likeCnt,
         Boolean myLike
 )
 {
-    public PostResponseDto(Post post, List<String> imageUrls, Long like_cnt, Boolean myLike){
+    public PostResponseDto(Post post, List<String> imageUrls, Long likeCnt, Boolean myLike){
         this(
                 post.getId(),
                 post.getTitle(),
@@ -36,12 +36,12 @@ public record PostResponseDto(
                 post.getMember().getName(),
                 post.getMember().getProfileImage(),
 
-                like_cnt,
+                likeCnt,
                 myLike
         );
     }
 
-    public PostResponseDto(PostLike postLike, List<String> imageUrls, Long like_cnt, Boolean myLike){
+    public PostResponseDto(PostLike postLike, List<String> imageUrls, Long likeCnt, Boolean myLike){
         this(
                 postLike.getPost().getId(),
                 postLike.getPost().getTitle(),
@@ -53,7 +53,7 @@ public record PostResponseDto(
                 postLike.getMember().getName(),
                 postLike.getMember().getProfileImage(),
 
-                like_cnt,
+                likeCnt,
                 myLike
         );
     }
