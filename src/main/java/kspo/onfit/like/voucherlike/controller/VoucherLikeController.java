@@ -29,7 +29,7 @@ public class VoucherLikeController {
             @PathVariable Long voucherId
     ) {
         Long savedId = voucherLikeService.createVoucherLike(voucherId, memberId);
-        return ResponseEntity.created(URI.create(String.format("/api/post/%d/like/%d", voucherId, savedId))).build();
+        return ResponseEntity.created(URI.create(String.format("/api/vouchers/%d/like/%d", voucherId, savedId))).build();
     }
 
     @DeleteMapping("/{voucherId}/like")
