@@ -30,5 +30,9 @@ public class VoucherLikeLowService {
         return voucherLikeRepository.findVoucherLikeByMemberIdWithMemberAndVoucher(memberId, pageable);
     }
 
+    public List<VoucherLike> findVoucherLikeByMemberId(Long memberId){
+        return voucherLikeRepository.findVoucherLikeByMemberId(memberId);
+    }
+
 
 }

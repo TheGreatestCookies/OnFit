@@ -21,7 +21,6 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     @Query("select pl from PostLike pl where pl.member.id = :memberId")
     List<PostLike> findPostLikeByMemberId(Long memberId);
 
-
     void removeByPostIdAndMemberId(Long postId, Long memberId);
 
     @Modifying(clearAutomatically = true)
@@ -30,9 +29,5 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     @Query("select count(pl) from PostLike pl where pl.post.id = :postId")
     long countPostLike(Long postId);
-
-    @Query("select count(pl) from PostLike pl where pl.post.id in :postId")
-    List<Long> countPostLikebyPostIds(List<Long> postId);
-
 
 }

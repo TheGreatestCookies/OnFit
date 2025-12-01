@@ -40,7 +40,7 @@ public class VoucherLikeService {
 
     public Page<VoucherResponseDto> getMyVoucherLikeList(Long memberId, Pageable pageable){
         Page<VoucherLike> voucherLikes = voucherLikeLowService.findVoucherLikeByMemberIdWithMemberAndVoucher(memberId, pageable);
-        return voucherLikes.map(voucherLike -> new VoucherResponseDto(voucherLike.getVoucher()));
+        return voucherLikes.map(voucherLike -> new VoucherResponseDto(voucherLike.getVoucher(), true));
     }
 
 }

@@ -1,5 +1,6 @@
 package kspo.onfit.like.voucherlike.repository;
 
+import java.util.List;
 import kspo.onfit.like.voucherlike.domain.VoucherLike;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,5 +18,8 @@ public interface VoucherLikeRepository extends JpaRepository<VoucherLike, Long> 
             countQuery = "select count(vl) from VoucherLike vl where vl.member.id = :memberId"
     )
     Page<VoucherLike> findVoucherLikeByMemberIdWithMemberAndVoucher(Long memberId, Pageable pageable);
+
+    @Query("select vl from VoucherLike vl where vl.member.id = :memberId")
+    List<VoucherLike> findVoucherLikeByMemberId(Long memberId);
     
 }
