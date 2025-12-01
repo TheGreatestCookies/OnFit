@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/api/voucher")
+@RequestMapping("/api/vouchers")
 @Tag(name = "Voucher API", description = "이용권 조회를 위한 API")
 public class VoucherController {
 

@@ -38,4 +38,5 @@ public record VoucherResponseDto(
                 voucher.getPrice()
         );
     }
+
 }
