@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/api/voucher")
+@RequestMapping("/api/vouchers")
 @Tag(name = "Voucher API", description = "이용권 조회를 위한 API")
 public class VoucherController {
 
     public final VoucherService voucherService;
+
+    public final Long memberId = 2L;
 
     @GetMapping
     @Operation(summary = "지역과 종목을 기준으로 이용권 조회")
@@ -30,7 +32,7 @@ public class VoucherController {
             @RequestParam(defaultValue = "5") int size
     ){
         Page<VoucherResponseDto> voucherResponseDtos =
-                voucherService.searchVoucherByAreaAndSports(area, sports, PageRequest.of(page, size));
+                voucherService.searchVoucherByAreaAndSports(area, sports, memberId, PageRequest.of(page, size));
         return ResponseEntity.ok(voucherResponseDtos);
     }
 

@@ -3,6 +3,7 @@ package kspo.onfit.voucher.dto;
 import kspo.onfit.voucher.domain.Voucher;
 
 public record VoucherResponseDto(
+
         Long id,
         String name,
         String area,
@@ -17,9 +18,13 @@ public record VoucherResponseDto(
         String zipCode,
         String telephone,
         Integer memberCount,
-        Integer price
+        Integer price,
+
+        Long likeCnt,
+        Boolean myLike
+
 ){
-    public VoucherResponseDto(Voucher voucher){
+    public VoucherResponseDto(Voucher voucher, Long likeCnt, Boolean myLike){
         this(
                 voucher.getId(),
                 voucher.getName(),
@@ -35,7 +40,11 @@ public record VoucherResponseDto(
                 voucher.getZipCode(),
                 voucher.getTelephone(),
                 voucher.getMemberCount(),
-                voucher.getPrice()
+                voucher.getPrice(),
+
+                likeCnt,
+                myLike
         );
     }
+
 }
