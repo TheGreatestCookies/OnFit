@@ -41,4 +41,8 @@ public class PostLowService {
         postRepository.removePostById(id);
     }
 
+    public Post getReferenceById(Long id){
+        return postRepository.getReferenceById(id);
+    }
+
 }

@@ -24,4 +24,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
             LIMIT 50
             """, nativeQuery = true)
     List<Object[]> findNearestVouchersWithDistance(@Param("lat") double lat, @Param("lng") double lng);
+    @Override
+    Voucher getReferenceById(Long id);
+
 }
