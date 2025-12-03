@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마음핏 챗봇</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            /* 모바일 키보드 대응 */
+            height: 100vh;
+            max-height: 100dvh;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 500px;
+            height: 80vh;
+            max-height: 800px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chat-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .clear-button {
+            background: #f1f3f5;
+            border: none;
+            color: #666;
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .message.user { align-items: flex-end; }
+        .message.assistant { align-items: flex-start; }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-bubble {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-bubble {
+            background: #f8f9fa;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .message-bubble.recommendation {
+            background: #fbfbfe;
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            width: 95%;
+            max-width: 95%;
+            padding: 18px;
+            border-radius: 20px;
+        }
+
+        .voucher-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .voucher-item:last-child { margin-bottom: 0; }
+
+        .voucher-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .voucher-name { font-weight: 600; font-size: 15px; flex: 1; }
+
+        .voucher-category {
+            background: var(--bg-gradient);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .voucher-facility { font-size: 13px; color: #555; margin-bottom: 4px; }
+        .voucher-desc { font-size: 13px; color: #888; margin-bottom: 8px; }
+
+        .voucher-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 8px;
+            border-top: 1px solid #f1f3f5;
+        }
+
+        .voucher-price { font-weight: 700; font-size: 16px; color: var(--primary-color); }
+        .voucher-tel { font-size: 12px; color: #888; }
+        .voucher-tel a { color: #667eea; text-decoration: none; }
+
+        .video-list {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .video-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e6e6e6;
+            min-width: 300px;
+            flex-shrink: 0;
+        }
+
+        .video-frame { width: 100%; height: 169px; border: none; background: #000; }
+        .video-info { padding: 12px; }
+        .video-title { font-size: 15px; font-weight: 600; }
+
+        .chat-input-container {
+            padding: 16px 16px 18px;
+            background: white;
+            border-top: 1px solid #f1f3f5;
+            display: flex;
+            gap: 10px;
+            /* 하단 고정 (모바일에서 버튼 숨김 방지) */
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #f1f3f5;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            background: #f8f9fa;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary-color);
+            background: white;
+        }
+
+        .send-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-gradient);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .send-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .send-button svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
+
+        .typing-indicator { display: flex; gap: 4px; padding: 4px 8px; justify-content: center; }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #b0b0b0;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.4); opacity: 1; }
+        }
+
+        /* 모바일 전용 최적화 */
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+            }
+
+            .chat-container {
+                height: 100vh;
+                max-height: 100dvh;
+                border-radius: 16px;
+            }
+
+            .chat-header {
+                padding: 14px 16px;
+            }
+
+            .chat-messages {
+                padding: 12px 14px;
+            }
+
+            .chat-input-container {
+                padding: 10px 12px 14px;
+                gap: 8px;
+            }
+
+            .chat-input {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            .send-button {
+                width: 44px;
+                height: 44px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🐯 마음핏 챗봇</h1>
+            <button class="clear-button" onclick="clearChat()">대화 초기화</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-bubble">
+                    안녕하세요! 저는 마음핏의 호랑이 코치입니다. 🐯<br>
+                    오늘 기분은 어떠신가요?
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="messageInput" placeholder="메시지를 입력하세요..." onkeypress="handleKeyPress(event)">
+            <button class="send-button" id="sendButton" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = crypto.randomUUID();
+        let isProcessing = false;
+        let userLocation = { lat: 35.2309383, lng: 129.0825007 };
+
+        window.addEventListener('load', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLocation.lat = pos.coords.latitude;
+                        userLocation.lng = pos.coords.longitude;
+                    },
+                    () => {},
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        });
+
+        async function clearChat() {
+            await fetch(`/api/chat/${sessionId}`, { method: 'DELETE' });
+            sessionId = crypto.randomUUID();
+            
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message assistant">
+                    <div class="message-bubble">
+                        안녕하세요! 저는 마음핏의 호랑이 코치입니다. 🐯<br>
+                        오늘 기분은 어떠신가요?
+                    </div>
+                </div>
+            `;
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage('user', message);
+            input.value = '';
+            setSendButtonState(false);
+            showTypingIndicator();
+
+            try {
+                isProcessing = true;
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        userMessage: message,
+                        lat: userLocation.lat,
+                        lng: userLocation.lng
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let currentBubble = null;
+                let currentContent = '';
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (!line.trim().startsWith('data:')) continue;
+                        const jsonStr = line.substring(5).trim();
+                        if (!jsonStr) continue;
+
+                        try {
+                            const json = JSON.parse(jsonStr);
+
+                            if (json.type === 'recommend' && json.vouchers) {
+                                hideTypingIndicator();
+                                addRecommendationMessage(json.message, json.vouchers);
+                                currentBubble = null;
+                                currentContent = '';
+                            } else if (json.type === 'home_workout' && json.videos) {
+                                hideTypingIndicator();
+                                addHomeWorkoutMessage(json.message, json.videos);
+                                currentBubble = null;
+                                currentContent = '';
+                            } else if (json.type === 'talk' && json.chunk) {
+                                if (!currentBubble) {
+                                    hideTypingIndicator();
+                                    currentBubble = createAssistantBubble();
+                                }
+                                currentContent += json.chunk;
+                                currentBubble.textContent = currentContent;
+                                scrollToBottom();
+                            }
+                        } catch (e) {}
+                    }
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                isProcessing = false;
+                setSendButtonState(true);
+                hideTypingIndicator();
+            }
+        }
+
+        function createAssistantBubble() {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+            return bubble;
+        }
+
+        function addMessage(role, content) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = content;
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function formatPrice(price) {
+            return price ? price.toLocaleString() + '원' : '가격 문의';
+        }
+
+        function formatDistance(distance) {
+            if (distance == null) return '';
+            return distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance}km`;
+        }
+
+        function addRecommendationMessage(message, vouchers) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble recommendation';
+
+            const voucherHTML = vouchers.map(v => `
+                <div class="voucher-item">
+                    <div class="voucher-header">
+                        <span class="voucher-name">${v.name}</span>
+                        <span class="voucher-category">${v.category}</span>
+                    </div>
+                    ${v.facilityName ? `<div class="voucher-facility">🏢 ${v.facilityName}</div>` : ''}
+                    <div class="voucher-desc">📍 ${v.description}${v.distance != null ? ` <span style="color:#667eea; font-weight:500;">(${formatDistance(v.distance)})</span>` : ''}</div>
+                    <div class="voucher-footer">
+                        <span class="voucher-price">${formatPrice(v.price)}</span>
+                        ${v.telephone ? `<span class="voucher-tel">📞 <a href="tel:${v.telephone}">${v.telephone}</a></span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            bubble.innerHTML = `
+                <div style="margin-bottom: 12px;">${message}</div>
+                <div style="font-weight:bold; color:#667eea; margin-bottom:8px;">🏃 추천 운동 시설</div>
+                ${voucherHTML}
+            `;
+
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addHomeWorkoutMessage(message, videos) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble recommendation';
+
+            if (!videos || videos.length === 0) {
+                bubble.innerHTML = `<div>${message || '운동을 추천해드릴게요!'}</div><div style="color:#666;">추천할 영상을 찾지 못했어요. 😅</div>`;
+            } else {
+                const items = videos.map(v => `
+                    <div class="video-item">
+                        <iframe class="video-frame" src="https://www.youtube.com/embed/${v.youtubeCode}" title="${v.title}" allowfullscreen></iframe>
+                        <div class="video-info"><div class="video-title">${v.title}</div></div>
+                    </div>
+                `).join('');
+
+                bubble.innerHTML = `
+                    <div style="margin-bottom: 12px;">${message || '집에서 할 수 있는 맞춤 운동을 추천해드릴게요!'}</div>
+                    <div style="font-weight:bold; color:#667eea; margin-bottom:8px;">🏠 추천 운동 영상</div>
+                    <div class="video-list">${items}</div>
+                `;
+            }
+
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            if (document.getElementById('typingIndicator')) return;
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            div.id = 'typingIndicator';
+            div.innerHTML = `<div class="message-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator')?.remove();
+        }
+
+        function setSendButtonState(enabled) {
+            document.getElementById('sendButton').disabled = !enabled;
+            document.getElementById('messageInput').disabled = !enabled;
+            if (enabled) document.getElementById('messageInput').focus();
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatMessages');
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
