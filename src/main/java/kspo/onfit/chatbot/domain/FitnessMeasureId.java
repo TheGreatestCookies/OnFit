@@ -1,0 +1,16 @@
+package kspo.onfit.chatbot.domain;
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+public class FitnessMeasureId implements Serializable {
+    private String mberSeqNoValue;
+    private String mesureSeqNo;
+}
+
