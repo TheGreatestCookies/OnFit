@@ -1,36 +1,21 @@
 package kspo.onfit.chatbot.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Getter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ChatRequestDto {
-    private String sessionId;
-    private String userMessage;
-    private double lat;
-    private double lng;
-    private Long memberId;
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MessageDto {
-        private String role;
-        private String content;
-        private String toolCallId;
-        private List<ToolCallDto> toolCalls;
-
+public record ChatRequestDto(
+        String sessionId,
+        String userMessage,
+        double lat,
+        double lng
+) {
+    public record MessageDto(
+            String role,
+            String content,
+            String toolCallId,
+            List<ToolCallDto> toolCalls
+    ) {
         public MessageDto(String role, String content) {
-            this.role = role;
-            this.content = content;
+            this(role, content, null, null);
         }
 
         public static MessageDto user(String content) {
@@ -42,38 +27,30 @@ public class ChatRequestDto {
         }
 
         public static MessageDto toolResponse(String toolCallId, String content) {
-            return MessageDto.builder()
-                    .role("tool")
-                    .content(content)
-                    .toolCallId(toolCallId)
-                    .build();
+            return new MessageDto("tool", content, toolCallId, null);
         }
 
         public static MessageDto assistantToolCall(List<ToolCallDto> toolCalls) {
-            return MessageDto.builder()
-                    .role("assistant")
-                    .content(null)
-                    .toolCalls(toolCalls)
-                    .build();
+            return new MessageDto("assistant", null, null, toolCalls);
         }
     }
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ToolCallDto {
-        private String id;
-        private String type;
-        private FunctionDto function;
+    public record ToolCallDto(
+            String id,
+            String type,
+            FunctionDto function
+    ) {
+        public static ToolCallDto of(String id, String type, FunctionDto function) {
+            return new ToolCallDto(id, type, function);
+        }
     }
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FunctionDto {
-        private String name;
-        private String arguments;
+    public record FunctionDto(
+            String name,
+            String arguments
+    ) {
+        public static FunctionDto of(String name, String arguments) {
+            return new FunctionDto(name, arguments);
+        }
     }
 }
