@@ -1,5 +1,6 @@
 package kspo.onfit.voucher.dto;
 
+import java.math.BigDecimal;
 import kspo.onfit.voucher.domain.Voucher;
 
 public record VoucherResponseDto(
@@ -19,6 +20,9 @@ public record VoucherResponseDto(
         String telephone,
         Integer memberCount,
         Integer price,
+
+        BigDecimal latitude,
+        BigDecimal longitude,
 
         Long likeCnt,
         Boolean myLike
@@ -41,6 +45,9 @@ public record VoucherResponseDto(
                 voucher.getTelephone(),
                 voucher.getMemberCount(),
                 voucher.getPrice(),
+
+                voucher.getLat(),
+                voucher.getLng(),
 
                 likeCnt,
                 myLike

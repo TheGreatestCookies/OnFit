@@ -1,9 +1,11 @@
 package kspo.onfit.voucher.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.math.BigDecimal;
 import lombok.Getter;
 
 @Entity
@@ -41,4 +43,11 @@ public class Voucher {
     private Integer memberCount;
 
     private Integer price;
+
+    @Column(precision = 15, scale = 12)
+    private BigDecimal lat;
+
+    @Column(precision = 15, scale = 12)
+    private BigDecimal lng;
+
 }
