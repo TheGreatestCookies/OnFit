@@ -17,5 +17,7 @@ public class VoucherInfoDto {
     private Integer price;
     private String telephone;
     private String facilityName;
+    private Double lat;
+    private Double lng;
     private Double distance;
 }
