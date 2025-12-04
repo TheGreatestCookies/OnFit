@@ -11,26 +11,28 @@ import java.util.List;
 
 public interface FitnessMeasureRepository extends JpaRepository<FitnessMeasure, FitnessMeasureId> {
 
+    /**
+     * 체형 유사도 순으로 10개 조회 (유클리드 거리 기반, 정규화 적용)
+     */
     @Query(value = """
         SELECT * FROM fitness_measure
-        WHERE MESURE_AGE_CO BETWEEN :minAge AND :maxAge
-          AND MESURE_IEM_001_VALUE BETWEEN :minHeight AND :maxHeight
-          AND MESURE_IEM_002_VALUE BETWEEN :minWeight AND :maxWeight
-          AND MESURE_IEM_003_VALUE BETWEEN :minBodyFat AND :maxBodyFat
-          AND MVM_PRSCRPTN_CN IS NOT NULL
+        WHERE MVM_PRSCRPTN_CN IS NOT NULL
           AND MVM_PRSCRPTN_CN != ''
-        ORDER BY MESURE_DE DESC
+          AND MESURE_IEM_001_VALUE IS NOT NULL
+          AND MESURE_IEM_002_VALUE IS NOT NULL
+        ORDER BY (
+            POW((:age - MESURE_AGE_CO) / 10.0, 2) +
+            POW((:height - MESURE_IEM_001_VALUE) / 20.0, 2) +
+            POW((:weight - MESURE_IEM_002_VALUE) / 20.0, 2) +
+            POW((:bodyFat - COALESCE(MESURE_IEM_003_VALUE, :bodyFat)) / 10.0, 2)
+        ) ASC
         LIMIT 10
         """, nativeQuery = true)
-    List<FitnessMeasure> findSimilarFitnessData(
-            @Param("minAge") int minAge,
-            @Param("maxAge") int maxAge,
-            @Param("minHeight") BigDecimal minHeight,
-            @Param("maxHeight") BigDecimal maxHeight,
-            @Param("minWeight") BigDecimal minWeight,
-            @Param("maxWeight") BigDecimal maxWeight,
-            @Param("minBodyFat") BigDecimal minBodyFat,
-            @Param("maxBodyFat") BigDecimal maxBodyFat
+    List<FitnessMeasure> findMostSimilarByBodyType(
+            @Param("age") int age,
+            @Param("height") BigDecimal height,
+            @Param("weight") BigDecimal weight,
+            @Param("bodyFat") BigDecimal bodyFat
     );
 }
 
