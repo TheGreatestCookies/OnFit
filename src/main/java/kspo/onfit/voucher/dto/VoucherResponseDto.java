@@ -21,8 +21,8 @@ public record VoucherResponseDto(
         Integer memberCount,
         Integer price,
 
-        double latitude,
-        double longitude,
+        BigDecimal latitude,
+        BigDecimal longitude,
 
         Long likeCnt,
         Boolean myLike
@@ -46,8 +46,8 @@ public record VoucherResponseDto(
                 voucher.getMemberCount(),
                 voucher.getPrice(),
 
-                voucher.getLat().doubleValue(),
-                voucher.getLng().doubleValue(),
+                voucher.getLat(),
+                voucher.getLng(),
 
                 likeCnt,
                 myLike
