@@ -2,8 +2,14 @@ package kspo.onfit.chatbot.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kspo.onfit.chatbot.client.OpenAiClient;
+import kspo.onfit.chatbot.domain.HomeWorkoutRecommendationLog;
+import kspo.onfit.chatbot.domain.VoucherRecommendationLog;
 import kspo.onfit.chatbot.dto.ChatRequestDto;
 import kspo.onfit.chatbot.dto.VoucherInfoDto;
+import kspo.onfit.chatbot.repository.HomeWorkoutRecommendationLogRepository;
+import kspo.onfit.chatbot.repository.VoucherRecommendationLogRepository;
+import kspo.onfit.member.domain.Member;
+import kspo.onfit.member.repository.MemberRepository;
 import kspo.onfit.voucher.repository.VoucherRepository;
 import kspo.onfit.video.domain.FitnessVideo;
 import kspo.onfit.video.repository.FitnessVideoRepository;
@@ -25,9 +31,13 @@ public class ChatService {
     private final VoucherRepository voucherRepository;
     private final FitnessMeasureService fitnessMeasureService;
     private final FitnessVideoRepository fitnessVideoRepository;
+    private final VoucherRecommendationLogRepository voucherRecommendationLogRepository;
+    private final HomeWorkoutRecommendationLogRepository homeWorkoutRecommendationLogRepository;
+    private final MemberRepository memberRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<String, List<ChatRequestDto.MessageDto>> sessionStore = new ConcurrentHashMap<>();
+    private final Map<String, Long> sessionMemberStore = new ConcurrentHashMap<>();
     private static final int MAX_TOOL_CALL_DEPTH = 5;
 
     public Flux<String> chatStream(ChatRequestDto request) {
@@ -38,6 +48,10 @@ public class ChatService {
                 sessionId, k -> new ArrayList<>());
 
         messages.add(ChatRequestDto.MessageDto.user(userMessage));
+
+        if (request.getMemberId() != null) {
+            sessionMemberStore.put(sessionId, request.getMemberId());
+        }
 
         List<VoucherInfoDto> voucherInfos = getVoucherInfos(request.getLat(), request.getLng());
 
@@ -131,7 +145,7 @@ public class ChatService {
             messages.add(ChatRequestDto.MessageDto.assistantToolCall(toolCallDtos));
 
             for (ToolCallInfo toolCall : toolCalls) {
-                ToolCallResult result = executeToolCall(toolCall, voucherInfos);
+                ToolCallResult result = executeToolCall(toolCall, voucherInfos, sessionId);
 
                 messages.add(ChatRequestDto.MessageDto.toolResponse(toolCall.id, result.toolResponse));
 
@@ -184,13 +198,13 @@ public class ChatService {
 
     private String inferFunctionName(String argsJson) {
         if (argsJson == null || argsJson.isBlank()) return "get_fitness_prescription";
-        if (argsJson.contains("voucher_ids")) return "recommend_voucher_facilities";
+        if (argsJson.contains("voucher_numbers")) return "recommend_voucher_facilities";
         if (argsJson.contains("main_exercises") || argsJson.contains("warmup_exercises") || argsJson.contains("cool_down_exercises"))
             return "recommend_home_workout";
         return "get_fitness_prescription";
     }
 
-    private ToolCallResult executeToolCall(ToolCallInfo toolCall, List<VoucherInfoDto> voucherInfos) {
+    private ToolCallResult executeToolCall(ToolCallInfo toolCall, List<VoucherInfoDto> voucherInfos, String sessionId) {
         ToolCallResult result = new ToolCallResult();
 
         try {
@@ -204,9 +218,9 @@ public class ChatService {
 
             switch (toolCall.name) {
                 case "recommend_voucher_facilities":
-                    return executeRecommendVoucherFacilities(toolCall.id, args, voucherInfos);
+                    return executeRecommendVoucherFacilities(toolCall.id, args, voucherInfos, sessionId);
                 case "recommend_home_workout":
-                    return executeRecommendHomeWorkout(toolCall.id, args);
+                    return executeRecommendHomeWorkout(toolCall.id, args, sessionId);
                 case "get_fitness_prescription":
                     return executeGetFitnessPrescription(toolCall.id, args);
                 default:
@@ -221,22 +235,29 @@ public class ChatService {
     }
 
     private ToolCallResult executeRecommendVoucherFacilities(String toolCallId,
-            Map<String, Object> args, List<VoucherInfoDto> voucherInfos) throws Exception {
+            Map<String, Object> args, List<VoucherInfoDto> voucherInfos, String sessionId) throws Exception {
         ToolCallResult result = new ToolCallResult();
 
         String message = (String) args.get("message");
         @SuppressWarnings("unchecked")
-        List<Integer> voucherIds = (List<Integer>) args.get("voucher_ids");
+        List<Integer> voucherNumbers = (List<Integer>) args.get("voucher_numbers");
+        @SuppressWarnings("unchecked")
+        List<String> moodTags = args.get("mood_tags") != null
+                ? ((List<String>) args.get("mood_tags")).stream().limit(4).collect(Collectors.toList())
+                : Collections.emptyList();
 
-        if (voucherIds == null || voucherIds.isEmpty()) {
-            result.toolResponse = "추천할 시설 ID가 없습니다.";
+        if (voucherNumbers == null || voucherNumbers.isEmpty()) {
+            result.toolResponse = "추천할 시설 번호가 없습니다.";
             return result;
         }
 
-        List<Long> targetIds = voucherIds.stream().map(Number::longValue).collect(Collectors.toList());
-        List<VoucherInfoDto> recommendedVouchers = voucherInfos.stream()
-                .filter(v -> targetIds.contains(v.getId()))
+        List<VoucherInfoDto> recommendedVouchers = voucherNumbers.stream()
+                .filter(num -> num >= 1 && num <= voucherInfos.size())
+                .limit(3)
+                .map(num -> voucherInfos.get(num - 1))
                 .collect(Collectors.toList());
+
+        saveVoucherRecommendationLog(sessionId, recommendedVouchers, moodTags);
 
         result.immediateResponse = objectMapper.writeValueAsString(Map.of(
                 "type", "recommend",
@@ -244,14 +265,14 @@ public class ChatService {
                 "vouchers", recommendedVouchers));
 
         result.toolResponse = String.format(
-                "추천 완료: %d개 시설. 이제 '집에서 할 수 있는 간단한 운동도 추천해줄까?'라고 물어보세요.",
+                "추천 완료: %d개 시설. 이제 '집에서 할 수 있는 간단한 운동도 추천해줄까?'라고 물어보세요. / 위 추천 시설에 대한 설명은 이미 진행했으므로 생략하세요.",
                 recommendedVouchers.size());
 
         return result;
     }
 
     private ToolCallResult executeRecommendHomeWorkout(String toolCallId,
-            Map<String, Object> args) throws Exception {
+            Map<String, Object> args, String sessionId) throws Exception {
         ToolCallResult result = new ToolCallResult();
 
         String message = (String) args.get("message");
@@ -264,11 +285,22 @@ public class ChatService {
         @SuppressWarnings("unchecked")
         List<String> coolDownExercises = args.get("cool_down_exercises") != null
                 ? (List<String>) args.get("cool_down_exercises") : Collections.emptyList();
+        @SuppressWarnings("unchecked")
+        List<String> moodTags = args.get("mood_tags") != null
+                ? ((List<String>) args.get("mood_tags")).stream().limit(4).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<FitnessVideo> warmupVideos = findVideos(warmupExercises);
+        List<FitnessVideo> mainVideos = findVideos(mainExercises);
+        List<FitnessVideo> coolDownVideos = findVideos(coolDownExercises);
 
         List<FitnessVideo> allVideos = new ArrayList<>();
-        allVideos.addAll(findVideos(warmupExercises));
-        allVideos.addAll(findVideos(mainExercises));
-        allVideos.addAll(findVideos(coolDownExercises));
+        allVideos.addAll(warmupVideos);
+        allVideos.addAll(mainVideos);
+        allVideos.addAll(coolDownVideos);
+
+        saveHomeWorkoutRecommendationLog(sessionId, warmupExercises, mainExercises, coolDownExercises,
+                warmupVideos, mainVideos, coolDownVideos, moodTags);
 
         result.immediateResponse = objectMapper.writeValueAsString(Map.of(
                 "type", "home_workout",
@@ -314,6 +346,96 @@ public class ChatService {
 
     public void clearSession(String sessionId) {
         sessionStore.remove(sessionId);
+        sessionMemberStore.remove(sessionId);
+    }
+
+    private void saveVoucherRecommendationLog(String sessionId, List<VoucherInfoDto> vouchers, List<String> moodTags) {
+        try {
+            Long memberId = sessionMemberStore.get(sessionId);
+            if (memberId == null) {
+                log.debug("비로그인 사용자 - 시설 추천 로그 저장 생략");
+                return;
+            }
+
+            Member member = memberRepository.findById(memberId).orElse(null);
+            if (member == null) {
+                return;
+            }
+
+            String moodTagsString = moodTags != null && !moodTags.isEmpty()
+                    ? String.join(",", moodTags)
+                    : null;
+
+            String voucherDetailsJson = objectMapper.writeValueAsString(vouchers);
+
+            VoucherRecommendationLog logEntry = VoucherRecommendationLog.builder()
+                    .member(member)
+                    .sessionId(sessionId)
+                    .voucherDetailsJson(voucherDetailsJson)
+                    .moodTags(moodTagsString)
+                    .build();
+
+            voucherRecommendationLogRepository.save(logEntry);
+            log.info("시설 추천 로그 저장 완료: memberId={}, moodTags={}", memberId, moodTagsString);
+        } catch (Exception e) {
+            log.error("시설 추천 로그 저장 실패", e);
+        }
+    }
+
+    private void saveHomeWorkoutRecommendationLog(String sessionId,
+            List<String> warmupExercises, List<String> mainExercises, List<String> coolDownExercises,
+            List<FitnessVideo> warmupVideos, List<FitnessVideo> mainVideos, List<FitnessVideo> coolDownVideos,
+            List<String> moodTags) {
+        try {
+            Long memberId = sessionMemberStore.get(sessionId);
+            if (memberId == null) {
+                log.debug("비로그인 사용자 - 집 운동 추천 로그 저장 생략");
+                return;
+            }
+
+            Member member = memberRepository.findById(memberId).orElse(null);
+            if (member == null) {
+                return;
+            }
+
+            String moodTagsString = moodTags != null && !moodTags.isEmpty()
+                    ? String.join(",", moodTags)
+                    : null;
+
+            String warmupExercisesString = warmupExercises != null && !warmupExercises.isEmpty()
+                    ? String.join(",", warmupExercises)
+                    : null;
+            String mainExercisesString = mainExercises != null && !mainExercises.isEmpty()
+                    ? String.join(",", mainExercises)
+                    : null;
+            String coolDownExercisesString = coolDownExercises != null && !coolDownExercises.isEmpty()
+                    ? String.join(",", coolDownExercises)
+                    : null;
+
+            String warmupVideosJson = objectMapper.writeValueAsString(
+                    warmupVideos.stream().map(v -> Map.of("title", v.getTitle(), "youtubeCode", v.getYoutubeCode())).collect(Collectors.toList()));
+            String mainVideosJson = objectMapper.writeValueAsString(
+                    mainVideos.stream().map(v -> Map.of("title", v.getTitle(), "youtubeCode", v.getYoutubeCode())).collect(Collectors.toList()));
+            String coolDownVideosJson = objectMapper.writeValueAsString(
+                    coolDownVideos.stream().map(v -> Map.of("title", v.getTitle(), "youtubeCode", v.getYoutubeCode())).collect(Collectors.toList()));
+
+            HomeWorkoutRecommendationLog logEntry = HomeWorkoutRecommendationLog.builder()
+                    .member(member)
+                    .sessionId(sessionId)
+                    .warmupExercises(warmupExercisesString)
+                    .mainExercises(mainExercisesString)
+                    .coolDownExercises(coolDownExercisesString)
+                    .warmupVideosJson(warmupVideosJson)
+                    .mainVideosJson(mainVideosJson)
+                    .coolDownVideosJson(coolDownVideosJson)
+                    .moodTags(moodTagsString)
+                    .build();
+
+            homeWorkoutRecommendationLogRepository.save(logEntry);
+            log.info("집 운동 추천 로그 저장 완료: memberId={}, moodTags={}", memberId, moodTagsString);
+        } catch (Exception e) {
+            log.error("집 운동 추천 로그 저장 실패", e);
+        }
     }
 
     private List<VoucherInfoDto> getVoucherInfos(double lat, double lng) {
@@ -328,7 +450,9 @@ public class ChatService {
                         .category((String) row[4])
                         .price(row[5] != null ? ((Number) row[5]).intValue() : null)
                         .telephone((String) row[6])
-                        .distance(row[7] != null ? ((Number) row[7]).doubleValue() : null)
+                        .lat(row[7] != null ? ((Number) row[7]).doubleValue() : null)
+                        .lng(row[8] != null ? ((Number) row[8]).doubleValue() : null)
+                        .distance(row[9] != null ? ((Number) row[9]).doubleValue() : null)
                         .build())
                 .collect(Collectors.toList());
     }

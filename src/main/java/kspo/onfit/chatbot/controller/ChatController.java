@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kspo.onfit.chatbot.dto.ChatRequestDto;
 import kspo.onfit.chatbot.service.ChatService;
+import kspo.onfit.member.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -20,8 +21,20 @@ public class ChatController {
 
     @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "챗봇 메시지 전송 (스트리밍)", description = "세션 기반 대화. sessionId + userMessage만 전송")
-    public Flux<ServerSentEvent<String>> chatStream(@RequestBody ChatRequestDto request) {
-        return chatService.chatStream(request)
+    public Flux<ServerSentEvent<String>> chatStream(
+            @RequestBody ChatRequestDto request,
+            @SessionAttribute(name = "loginMember", required = false) Member loginMember) {
+        
+        Long memberId = loginMember != null ? loginMember.getId() : null;
+        ChatRequestDto requestWithMember = ChatRequestDto.builder()
+                .sessionId(request.getSessionId())
+                .userMessage(request.getUserMessage())
+                .lat(request.getLat())
+                .lng(request.getLng())
+                .memberId(memberId)
+                .build();
+        
+        return chatService.chatStream(requestWithMember)
                 .map(json -> ServerSentEvent.<String>builder()
                         .data(json)
                         .build());
