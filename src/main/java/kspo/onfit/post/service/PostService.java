@@ -13,7 +13,6 @@ import kspo.onfit.imageFile.service.ImageFileService;
 import kspo.onfit.imageFile.service.S3Service;
 import kspo.onfit.like.postlike.service.PostLikeLowService;
 import kspo.onfit.member.domain.Member;
-import kspo.onfit.member.service.MemberLowService;
 import kspo.onfit.post.domain.Post;
 import kspo.onfit.post.dto.PostRequestDto;
 import kspo.onfit.post.dto.PostResponseDto;
@@ -33,15 +32,13 @@ public class PostService {
     private final RedisUtil redisUtil;
     private final PostLowService postLowService;
     private final PostLikeLowService postLikeLowService;
-    private final MemberLowService memberLowService;
     private final ImageFileService imageFileService;
     private final S3Service s3Service;
 
-    public Long writePost(PostRequestDto postRequestDto, Long userId){
-        if(!checkPosts(userId)){
+    public Long writePost(PostRequestDto postRequestDto, Member member){
+        if(!checkPosts(member.getId())){
             throw new BadRequestException(ExceptionCode.POST_LIMIT);
         }
-        Member member = memberLowService.getReferenceById(userId);
         Post post = new Post(postRequestDto, member);
         Post savedPost = postLowService.savePost(post);
         imageFileService.saveImages(post.getId(), postRequestDto.imagesUrls()); // 데이터베이스에 이미지 url 저장
@@ -137,7 +134,7 @@ public class PostService {
     }
 
     public void removePost(Long id, Long memberId){
-        Post post = postLowService.findPostByIdAndMemberId(id, memberId);
+        postLowService.findPostByIdAndMemberId(id, memberId); // 권한 체크
 
         postLikeLowService.removePostLikeByPostId(id);
 
