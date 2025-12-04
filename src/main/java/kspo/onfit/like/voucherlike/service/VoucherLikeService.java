@@ -1,6 +1,5 @@
 package kspo.onfit.like.voucherlike.service;
 
-import java.util.Optional;
 import kspo.onfit.global.Exception.EntityDuplicateException;
 import kspo.onfit.global.Exception.ExceptionCode;
 import kspo.onfit.like.voucherlike.domain.VoucherLike;

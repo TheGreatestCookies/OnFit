@@ -14,7 +14,41 @@
     .brand-logo span{background:rgba(0,0,0,.25);padding:4px 6px;border-radius:999px;font-size:13px}
     .brand-text-main{font-family:"SF Pro Display",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:20px;font-weight:700;letter-spacing:.02em}
     .brand-text-sub{margin-top:2px;font-size:11px;color:var(--text-sub)}
-    .user-circle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border-soft);background:#f5f6f7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-main)}
+    .user-circle{width:32px;height:32px;border-radius:50%;border:1px solid var(--border-soft);background:#f5f6f7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-main);cursor:pointer;transition:background .12s ease}
+    .user-circle:hover{background:#e4e6eb}
+    .login-section{display:flex;align-items:center;gap:12px}
+    .login-form{display:flex;align-items:center;gap:8px}
+    .login-form input{height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--border-soft);font-size:12px;outline:none;background:#fafafa;color:var(--text-main)}
+    .login-form input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 1px rgba(0,149,246,.15)}
+    .login-form input[type="email"]{width:180px}
+    .login-form input[type="password"]{width:120px}
+    .login-form button{height:32px;padding:0 14px;font-size:12px;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;transition:background .12s ease}
+    .login-form button:hover{background:#0081d7}
+    .user-info{display:flex;align-items:center;gap:8px;font-size:12px}
+    .user-name{font-weight:600;color:var(--text-main)}
+    .logout-btn{height:28px;padding:0 12px;font-size:11px;border-radius:8px;border:1px solid var(--border-soft);background:#f0f2f5;color:var(--text-main);cursor:pointer;transition:background .12s ease}
+    .logout-btn:hover{background:#e4e6eb}
+    .login-status{font-size:11px;color:var(--text-sub);padding:4px 8px;border-radius:6px;background:#f0f2f5}
+    .signup-link{font-size:11px;color:var(--primary);cursor:pointer;text-decoration:none;padding:4px 8px;border-radius:6px;transition:background .12s ease}
+    .signup-link:hover{background:var(--primary-soft)}
+    .signup-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000}
+    .signup-modal.active{display:flex}
+    .signup-form-container{background:#fff;border-radius:16px;padding:24px;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+    .signup-form-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+    .signup-form-title{font-size:18px;font-weight:600}
+    .signup-close-btn{width:28px;height:28px;border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--text-sub);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .12s ease}
+    .signup-close-btn:hover{background:#f0f2f5}
+    .signup-form-group{margin-bottom:16px}
+    .signup-form-group label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text-sub)}
+    .signup-form-group input{width:100%;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--border-soft);font-size:13px;outline:none;background:#fafafa;color:var(--text-main)}
+    .signup-form-group input:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 1px rgba(0,149,246,.15)}
+    .profile-image-selector{display:flex;gap:8px;flex-wrap:wrap}
+    .profile-image-option{width:60px;height:60px;border-radius:12px;border:2px solid var(--border-soft);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .12s ease;background:#fafafa}
+    .profile-image-option:hover{border-color:var(--primary);background:var(--primary-soft)}
+    .profile-image-option.selected{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 2px rgba(0,149,246,.2)}
+    .signup-submit-btn{width:100%;height:36px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:background .12s ease;margin-top:8px}
+    .signup-submit-btn:hover{background:#0081d7}
+    .signup-submit-btn:disabled{opacity:.5;cursor:not-allowed}
     .layout{margin-top:18px;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1.4fr);gap:20px;align-items:flex-start}
     @media(max-width:900px){body{padding-top:12px}.top-nav{position:static;border-radius:0}.layout{grid-template-columns:minmax(0,1fr)}}
     .card{background:var(--card-bg);border:1px solid var(--border-soft);border-radius:16px;padding:16px 16px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
@@ -89,7 +123,50 @@
         <div class="brand-text-sub">Simple feed · S3 image test</div>
       </div>
     </div>
-    <div class="user-circle">You</div>
+    <div class="login-section">
+      <div id="loginForm" class="login-form">
+        <input type="email" id="emailInput" placeholder="이메일" />
+        <input type="password" id="passwordInput" placeholder="비밀번호" />
+        <button id="loginBtn">로그인</button>
+        <a href="#" id="signupLink" class="signup-link">회원가입</a>
+      </div>
+      <div id="userInfo" class="user-info" style="display:none;">
+        <span class="login-status">로그인됨</span>
+        <span class="user-name" id="userName"></span>
+        <button class="logout-btn" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+    <div id="signupModal" class="signup-modal">
+      <div class="signup-form-container">
+        <div class="signup-form-header">
+          <div class="signup-form-title">회원가입</div>
+          <button class="signup-close-btn" id="signupCloseBtn">×</button>
+        </div>
+        <div class="signup-form-group">
+          <label for="signupEmail">이메일</label>
+          <input type="email" id="signupEmail" placeholder="example@email.com" />
+        </div>
+        <div class="signup-form-group">
+          <label for="signupPassword">비밀번호</label>
+          <input type="password" id="signupPassword" placeholder="비밀번호를 입력하세요" />
+        </div>
+        <div class="signup-form-group">
+          <label for="signupName">이름</label>
+          <input type="text" id="signupName" placeholder="이름을 입력하세요" />
+        </div>
+        <div class="signup-form-group">
+          <label>프로필 이미지 선택 (1-5번)</label>
+          <div class="profile-image-selector" id="profileImageSelector">
+            <div class="profile-image-option" data-number="1">1</div>
+            <div class="profile-image-option" data-number="2">2</div>
+            <div class="profile-image-option" data-number="3">3</div>
+            <div class="profile-image-option" data-number="4">4</div>
+            <div class="profile-image-option" data-number="5">5</div>
+          </div>
+        </div>
+        <button class="signup-submit-btn" id="signupSubmitBtn">회원가입</button>
+      </div>
+    </div>
   </header>
   <div class="layout">
     <section class="card">
@@ -135,8 +212,19 @@
 </div>
 
 <script>
-  const submitBtn=document.getElementById("submitBtn"),resetBtn=document.getElementById("resetBtn"),previewEl=document.getElementById("preview"),urlListEl=document.getElementById("urlList"),logEl=document.getElementById("log"),modeBadgeEl=document.getElementById("modeBadge"),postListEl=document.getElementById("postList"),emptyTextEl=document.getElementById("emptyText"),paginationEl=document.getElementById("pagination"),prevPageBtn=document.getElementById("prevPageBtn"),nextPageBtn=document.getElementById("nextPageBtn"),pageInfoEl=document.getElementById("pageInfo");let currentPage=0;const pageSize=5;let currentImageUrls=[],editingPostId=null;
+  const submitBtn=document.getElementById("submitBtn"),resetBtn=document.getElementById("resetBtn"),previewEl=document.getElementById("preview"),urlListEl=document.getElementById("urlList"),logEl=document.getElementById("log"),modeBadgeEl=document.getElementById("modeBadge"),postListEl=document.getElementById("postList"),emptyTextEl=document.getElementById("emptyText"),paginationEl=document.getElementById("pagination"),prevPageBtn=document.getElementById("prevPageBtn"),nextPageBtn=document.getElementById("nextPageBtn"),pageInfoEl=document.getElementById("pageInfo"),loginFormEl=document.getElementById("loginForm"),userInfoEl=document.getElementById("userInfo"),emailInputEl=document.getElementById("emailInput"),passwordInputEl=document.getElementById("passwordInput"),loginBtnEl=document.getElementById("loginBtn"),logoutBtnEl=document.getElementById("logoutBtn"),userNameEl=document.getElementById("userName"),signupLinkEl=document.getElementById("signupLink"),signupModalEl=document.getElementById("signupModal"),signupCloseBtnEl=document.getElementById("signupCloseBtn"),signupEmailEl=document.getElementById("signupEmail"),signupPasswordEl=document.getElementById("signupPassword"),signupNameEl=document.getElementById("signupName"),signupSubmitBtnEl=document.getElementById("signupSubmitBtn"),profileImageSelectorEl=document.getElementById("profileImageSelector");let currentPage=0;const pageSize=5;let currentImageUrls=[],editingPostId=null,currentUser=null,selectedProfileImage=null;
   function log(msg){console.log(msg);logEl.textContent+=msg+"\n";logEl.scrollTop=logEl.scrollHeight}
+  function updateLoginUI(user){if(user){currentUser=user;loginFormEl.style.display="none";userInfoEl.style.display="flex";userNameEl.textContent=user.name||user.email||"사용자";log(`로그인 성공: ${user.email} (ID: ${user.id})`)}else{currentUser=null;loginFormEl.style.display="flex";userInfoEl.style.display="none";emailInputEl.value="";passwordInputEl.value="";log("로그아웃 완료")}}
+  async function checkLoginStatus(){try{const res=await fetch("/api/members/me");if(res.ok){const user=await res.json();updateLoginUI(user)}else{updateLoginUI(null)}}catch(e){updateLoginUI(null)}}
+  loginBtnEl.addEventListener("click",async()=>{const email=emailInputEl.value.trim();const password=passwordInputEl.value.trim();if(!email||!password){alert("이메일과 비밀번호를 입력해주세요.");return}try{log(`로그인 시도: ${email}`);const res=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password})});const resText=await res.text();if(!res.ok){log(`로그인 실패: ${res.status}\n${resText}`);alert("로그인 실패. 이메일과 비밀번호를 확인해주세요.");return}const user=JSON.parse(resText);updateLoginUI(user);alert("로그인 성공!");fetchPosts(0)}catch(e){console.error(e);log("로그인 에러: "+e.message);alert("로그인 중 오류가 발생했습니다.")}});
+  logoutBtnEl.addEventListener("click",async()=>{try{log("로그아웃 시도");const res=await fetch("/api/auth/logout",{method:"POST"});if(!res.ok){log(`로그아웃 실패: ${res.status}`);alert("로그아웃 실패.");return}updateLoginUI(null);alert("로그아웃 완료");fetchPosts(0)}catch(e){console.error(e);log("로그아웃 에러: "+e.message);alert("로그아웃 중 오류가 발생했습니다.")}});
+  passwordInputEl.addEventListener("keypress",(e)=>{if(e.key==="Enter")loginBtnEl.click()});
+  signupLinkEl.addEventListener("click",(e)=>{e.preventDefault();signupModalEl.classList.add("active")});
+  signupCloseBtnEl.addEventListener("click",()=>{signupModalEl.classList.remove("active");signupEmailEl.value="";signupPasswordEl.value="";signupNameEl.value="";selectedProfileImage=null;profileImageSelectorEl.querySelectorAll(".profile-image-option").forEach(el=>el.classList.remove("selected"))});
+  signupModalEl.addEventListener("click",(e)=>{if(e.target===signupModalEl)signupCloseBtnEl.click()});
+  profileImageSelectorEl.querySelectorAll(".profile-image-option").forEach(option=>{option.addEventListener("click",()=>{profileImageSelectorEl.querySelectorAll(".profile-image-option").forEach(el=>el.classList.remove("selected"));option.classList.add("selected");selectedProfileImage=parseInt(option.dataset.number)})});
+  signupSubmitBtnEl.addEventListener("click",async()=>{const email=signupEmailEl.value.trim();const password=signupPasswordEl.value.trim();const name=signupNameEl.value.trim();if(!email||!password||!name){alert("모든 필드를 입력해주세요.");return}if(!selectedProfileImage){alert("프로필 이미지를 선택해주세요.");return}try{signupSubmitBtnEl.disabled=true;log(`회원가입 시도: ${email}`);const res=await fetch("/api/members",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password,name,profileImageNumber:selectedProfileImage})});const resText=await res.text();if(!res.ok){log(`회원가입 실패: ${res.status}\n${resText}`);try{const error=JSON.parse(resText);alert(`회원가입 실패: ${error.message||resText}`)}catch{alert(`회원가입 실패: ${res.status}\n${resText}`)}return}const user=JSON.parse(resText);log(`회원가입 성공: ${user.email} (ID: ${user.id})`);alert("회원가입이 완료되었습니다!");signupCloseBtnEl.click();emailInputEl.value=email;passwordInputEl.value="";passwordInputEl.focus()}catch(e){console.error(e);log("회원가입 에러: "+e.message);alert("회원가입 중 오류가 발생했습니다.")}finally{signupSubmitBtnEl.disabled=false}});
+  signupPasswordEl.addEventListener("keypress",(e)=>{if(e.key==="Enter")signupSubmitBtnEl.click()});
   function setCreateMode(){editingPostId=null;document.getElementById("content").value="";currentImageUrls=[];document.getElementById("images").value="";renderCurrentImages();submitBtn.textContent="게시글 등록";modeBadgeEl.style.display="none"}
   function setEditMode(post){editingPostId=post.id;document.getElementById("content").value=post.content||"";currentImageUrls=Array.isArray(post.imageUrls)?[...post.imageUrls]:[];document.getElementById("images").value="";renderCurrentImages();submitBtn.textContent=`게시글 수정 (#${post.id})`;modeBadgeEl.style.display="inline-flex"}
   async function getPreSignedUrl(){const res=await fetch("/s3");if(!res.ok)throw new Error("GET /s3 실패: "+res.status);const data=await res.json();log("[/s3 응답] "+JSON.stringify(data));let presignedUrl=data.presignedUrl??data.preSignedUrl??data.url??data.uploadUrl??null;if(!presignedUrl){const values=Object.values(data);for(const v of values){if(typeof v==="string"&&v.startsWith("http")){presignedUrl=v;break}}}if(!presignedUrl)throw new Error("응답에서 presigned URL을 찾지 못했습니다. /s3 JSON 구조를 확인하세요.");const fileUrl=data.fileUrl??data.publicUrl??presignedUrl.split("?")[0];return{presignedUrl,fileUrl}}
@@ -199,7 +287,7 @@
   resetBtn.addEventListener("click",()=>{setCreateMode()});
   prevPageBtn.addEventListener("click",()=>{if(currentPage>0)fetchPosts(currentPage-1)});
   nextPageBtn.addEventListener("click",()=>{fetchPosts(currentPage+1)});
-  setCreateMode();fetchPosts(0);
+  setCreateMode();checkLoginStatus();fetchPosts(0);
 </script>
 </body>
 </html>

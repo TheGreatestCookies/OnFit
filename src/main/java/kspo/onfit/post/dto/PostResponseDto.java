@@ -17,7 +17,7 @@ public record PostResponseDto(
         //author Info
         Long userId,
         String userName,
-        String profileImage,
+        Integer profileImageNumber,
 
         //Boolean myLike,
         Long likeCnt,
@@ -34,7 +34,7 @@ public record PostResponseDto(
 
                 post.getMember().getId(),
                 post.getMember().getName(),
-                post.getMember().getProfileImage(),
+                post.getMember().getProfileImageNumber(),
 
                 likeCnt,
                 myLike
@@ -51,7 +51,7 @@ public record PostResponseDto(
 
                 postLike.getMember().getId(),
                 postLike.getMember().getName(),
-                postLike.getMember().getProfileImage(),
+                postLike.getMember().getProfileImageNumber(),
 
                 likeCnt,
                 myLike

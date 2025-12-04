@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마음핏 챗봇</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+            /* 모바일 키보드 대응 */
+            height: 100vh;
+            max-height: 100dvh;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+            max-height: 800px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 500px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .recommendations-sidebar {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .refresh-button {
+            background: var(--bg-gradient);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .refresh-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .refresh-button:active {
+            transform: rotate(180deg);
+        }
+
+        .recommendations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .recommendations-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .recommendations-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .recommendations-list::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .recommendation-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .recommendation-item:hover {
+            background: #f1f3f5;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .recommendation-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-type {
+            background: var(--bg-gradient);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .recommendation-type.voucher {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .recommendation-type.home-workout {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .recommendation-time {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .recommendation-content {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .exercise-section {
+            margin-bottom: 10px;
+        }
+
+        .exercise-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .exercise-list {
+            font-size: 13px;
+            color: #555;
+            padding-left: 12px;
+        }
+
+        .exercise-list-item {
+            margin-bottom: 2px;
+        }
+
+        .video-link {
+            text-decoration: none;
+            font-size: 12px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .video-link:hover {
+            opacity: 1;
+        }
+
+        .voucher-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .voucher-item {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .voucher-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .voucher-detail {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 4px;
+        }
+
+        .voucher-category {
+            font-size: 11px;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .voucher-facility {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .voucher-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f5576c;
+        }
+
+        .recommendation-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .chat-header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .clear-button {
+            background: #f1f3f5;
+            border: none;
+            color: #666;
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .clear-button:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .auth-button {
+            background: var(--bg-gradient);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .auth-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .auth-button:active {
+            transform: translateY(0);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideDownToast {
+            from {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-50%) translateY(20px);
+                opacity: 0;
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-button:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #f1f3f5;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group.error input {
+            border-color: #ff6b6b;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: #fff5f5;
+            border-radius: 8px;
+            border-left: 3px solid #ff6b6b;
+        }
+
+        .success-message {
+            color: #51cf66;
+            font-size: 14px;
+            padding: 12px 16px;
+            background: #f0fff4;
+            border-radius: 12px;
+            border-left: 3px solid #51cf66;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .profile-image-selector {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .profile-image-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            border: 3px solid #f1f3f5;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .profile-image-option:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .profile-image-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+            position: relative;
+        }
+
+        .profile-image-option.selected::after {
+            content: '✓';
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: var(--primary-color);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .modal-button.primary {
+            background: var(--bg-gradient);
+            color: white;
+        }
+
+        .modal-button.secondary {
+            background: #f1f3f5;
+            color: #666;
+        }
+
+        .modal-button:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .modal-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .switch-form a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle input {
+            padding-right: 45px;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            z-index: 10;
+            transition: color 0.2s;
+        }
+
+        .password-toggle-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            animation: slideIn 0.3s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user { align-items: flex-end; }
+        .message.assistant { align-items: flex-start; }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-bubble {
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-bubble {
+            background: #f8f9fa;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .message-bubble.recommendation {
+            background: #fbfbfe;
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            width: 95%;
+            max-width: 95%;
+            padding: 18px;
+            border-radius: 20px;
+        }
+
+        .voucher-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .voucher-item:last-child { margin-bottom: 0; }
+
+        .voucher-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .voucher-name { font-weight: 600; font-size: 15px; flex: 1; }
+
+        .voucher-category {
+            background: var(--bg-gradient);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .voucher-facility { font-size: 13px; color: #555; margin-bottom: 4px; }
+        .voucher-desc { font-size: 13px; color: #888; margin-bottom: 8px; }
+
+        .voucher-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 8px;
+            border-top: 1px solid #f1f3f5;
+        }
+
+        .voucher-price { font-weight: 700; font-size: 16px; color: var(--primary-color); }
+        .voucher-tel { font-size: 12px; color: #888; }
+        .voucher-tel a { color: #667eea; text-decoration: none; }
+
+        .video-list {
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .video-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e6e6e6;
+            min-width: 300px;
+            flex-shrink: 0;
+        }
+
+        .video-frame { width: 100%; height: 169px; border: none; background: #000; }
+        .video-info { padding: 12px; }
+        .video-title { font-size: 15px; font-weight: 600; }
+
+        .chat-input-container {
+            padding: 16px 16px 18px;
+            background: white;
+            border-top: 1px solid #f1f3f5;
+            display: flex;
+            gap: 10px;
+            /* 하단 고정 (모바일에서 버튼 숨김 방지) */
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #f1f3f5;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            background: #f8f9fa;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary-color);
+            background: white;
+        }
+
+        .send-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-gradient);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .send-button:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed;
+            transform: none;
+        }
+        .send-button svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
+
+        .typing-indicator { display: flex; gap: 4px; padding: 4px 8px; justify-content: center; }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #b0b0b0;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.4); opacity: 1; }
+        }
+
+        /* 모바일 전용 최적화 */
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+            }
+
+            .chat-container {
+                height: 100vh;
+                max-height: 100dvh;
+                border-radius: 16px;
+            }
+
+            .chat-header {
+                padding: 14px 16px;
+            }
+
+            .chat-messages {
+                padding: 12px 14px;
+            }
+
+            .chat-input-container {
+                padding: 10px 12px 14px;
+                gap: 8px;
+            }
+
+            .chat-input {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            .send-button {
+                width: 44px;
+                height: 44px;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+            }
+
+            .profile-image-option {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .header-buttons {
+                flex-wrap: wrap;
+            }
+
+            .auth-button {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+
+            .main-container {
+                flex-direction: column;
+                height: 100vh;
+                max-height: 100dvh;
+            }
+
+            .recommendations-sidebar {
+                width: 100%;
+                max-width: 500px;
+                height: 40vh;
+                order: -1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🐯 마음핏 챗봇</h1>
+            <div class="header-buttons">
+                <div id="userInfo" class="user-info" style="display: none;">
+                    <span class="user-name" id="userName"></span>
+                    <button class="auth-button" onclick="logout()">로그아웃</button>
+                </div>
+                <div id="loginButtons">
+                    <button class="auth-button" onclick="showLoginModal()">로그인</button>
+                    <button class="auth-button" onclick="showSignUpModal()">회원가입</button>
+                </div>
+            <button class="clear-button" onclick="clearChat()">대화 초기화</button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-bubble">
+                    안녕하세요! 저는 마음핏의 호랑이 코치입니다. 🐯<br>
+                    오늘 기분은 어떠신가요?
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="messageInput" placeholder="메시지를 입력하세요..." onkeypress="handleKeyPress(event)">
+            <button class="send-button" id="sendButton" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 추천 기록 사이드바 -->
+    <div class="recommendations-sidebar">
+        <div class="sidebar-header">
+            <h2>📋 추천 기록</h2>
+            <button class="refresh-button" onclick="loadRecommendations()" id="refreshBtn">🔄</button>
+        </div>
+        <div class="recommendations-list" id="recommendationsList">
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <div>아직 추천 기록이 없습니다</div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>로그인</h2>
+                <button class="close-button" onclick="closeLoginModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">이메일</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group password-toggle">
+                        <label for="loginPassword">비밀번호</label>
+                        <input type="password" id="loginPassword" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('loginPassword', this)">👁️</button>
+                    </div>
+                    <div id="loginError" class="error-message" style="display: none;"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="modal-button secondary" onclick="closeLoginModal()">취소</button>
+                        <button type="submit" class="modal-button primary" id="loginSubmitBtn">
+                            <span id="loginBtnText">로그인</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="switch-form">
+                    계정이 없으신가요? <a onclick="switchToSignUp()">회원가입</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원가입 모달 -->
+    <div id="signUpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>회원가입</h2>
+                <button class="close-button" onclick="closeSignUpModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="signUpForm" onsubmit="handleSignUp(event)">
+                    <div class="form-group">
+                        <label for="signUpEmail">이메일</label>
+                        <input type="email" id="signUpEmail" required>
+                    </div>
+                    <div class="form-group password-toggle">
+                        <label for="signUpPassword">비밀번호</label>
+                        <input type="password" id="signUpPassword" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('signUpPassword', this)">👁️</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="signUpName">이름</label>
+                        <input type="text" id="signUpName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>프로필 이미지</label>
+                        <div class="profile-image-selector">
+                            <div class="profile-image-option" data-number="1" onclick="selectProfileImage(1)">🐯</div>
+                            <div class="profile-image-option" data-number="2" onclick="selectProfileImage(2)">🐱</div>
+                            <div class="profile-image-option" data-number="3" onclick="selectProfileImage(3)">🐻</div>
+                            <div class="profile-image-option" data-number="4" onclick="selectProfileImage(4)">🐰</div>
+                            <div class="profile-image-option" data-number="5" onclick="selectProfileImage(5)">🐶</div>
+                        </div>
+                        <input type="hidden" id="signUpProfileImage" value="1" required>
+                    </div>
+                    <div id="signUpError" class="error-message" style="display: none;"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="modal-button secondary" onclick="closeSignUpModal()">취소</button>
+                        <button type="submit" class="modal-button primary" id="signUpSubmitBtn">
+                            <span id="signUpBtnText">회원가입</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="switch-form">
+                    이미 계정이 있으신가요? <a onclick="switchToLogin()">로그인</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = crypto.randomUUID();
+        let isProcessing = false;
+        let userLocation = { lat: 35.2309383, lng: 129.0825007 };
+        let currentUser = null;
+
+        window.addEventListener('load', () => {
+            checkLoginStatus();
+            loadRecommendations();
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLocation.lat = pos.coords.latitude;
+                        userLocation.lng = pos.coords.longitude;
+                    },
+                    () => {},
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+        });
+
+        // 로그인 상태 확인
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/api/members/me', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    currentUser = user;
+                    updateUserUI(user);
+                } else {
+                    currentUser = null;
+                    updateUserUI(null);
+                }
+            } catch (error) {
+                currentUser = null;
+                updateUserUI(null);
+            }
+        }
+
+        // 사용자 UI 업데이트
+        function updateUserUI(user) {
+            const userInfo = document.getElementById('userInfo');
+            const loginButtons = document.getElementById('loginButtons');
+            
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                userInfo.style.display = 'flex';
+                loginButtons.style.display = 'none';
+            } else {
+                userInfo.style.display = 'none';
+                loginButtons.style.display = 'flex';
+            }
+            loadRecommendations();
+        }
+
+        // 로그인 모달
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+            document.getElementById('loginEmail').focus();
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        // 회원가입 모달
+        function showSignUpModal() {
+            document.getElementById('signUpModal').style.display = 'block';
+            document.getElementById('signUpEmail').focus();
+            selectProfileImage(1);
+        }
+
+        function closeSignUpModal() {
+            document.getElementById('signUpModal').style.display = 'none';
+            document.getElementById('signUpForm').reset();
+            document.getElementById('signUpError').style.display = 'none';
+            selectProfileImage(1);
+        }
+
+        // 모달 간 전환
+        function switchToSignUp() {
+            closeLoginModal();
+            setTimeout(() => showSignUpModal(), 100);
+        }
+
+        function switchToLogin() {
+            closeSignUpModal();
+            setTimeout(() => showLoginModal(), 100);
+        }
+
+        // 프로필 이미지 선택
+        function selectProfileImage(number) {
+            document.querySelectorAll('.profile-image-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelector(`[data-number="${number}"]`).classList.add('selected');
+            document.getElementById('signUpProfileImage').value = number;
+        }
+
+        // 로그인 처리
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            setLoadingState('loginSubmitBtn', 'loginBtnText', true, '로그인');
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    currentUser = user;
+                    updateUserUI(user);
+                    closeLoginModal();
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.message || '로그인에 실패했습니다.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = '로그인 중 오류가 발생했습니다.';
+                errorDiv.style.display = 'block';
+            } finally {
+                setLoadingState('loginSubmitBtn', 'loginBtnText', false, '로그인');
+            }
+        }
+
+        // 회원가입 처리
+        async function handleSignUp(event) {
+            event.preventDefault();
+            const email = document.getElementById('signUpEmail').value;
+            const password = document.getElementById('signUpPassword').value;
+            const name = document.getElementById('signUpName').value;
+            const profileImageNumber = parseInt(document.getElementById('signUpProfileImage').value);
+            const errorDiv = document.getElementById('signUpError');
+
+            setLoadingState('signUpSubmitBtn', 'signUpBtnText', true, '회원가입');
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/members', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password, name, profileImageNumber })
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    currentUser = user;
+                    updateUserUI(user);
+                    closeSignUpModal();
+                    // 성공 토스트 메시지 표시
+                    showSuccessToast('회원가입이 완료되었습니다!');
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.message || '회원가입에 실패했습니다.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = '회원가입 중 오류가 발생했습니다.';
+                errorDiv.style.display = 'block';
+            } finally {
+                setLoadingState('signUpSubmitBtn', 'signUpBtnText', false, '회원가입');
+            }
+        }
+
+        // 성공 토스트 메시지
+        function showSuccessToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #51cf66;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 2000;
+                animation: slideUp 0.3s ease-out;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideDownToast 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        // 로그아웃 처리
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                currentUser = null;
+                updateUserUI(null);
+                loadRecommendations();
+            } catch (error) {
+                console.error('로그아웃 오류:', error);
+            }
+        }
+
+        // 비밀번호 보기/숨기기 토글
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        // 로딩 상태 설정
+        function setLoadingState(buttonId, textId, isLoading, defaultText) {
+            const button = document.getElementById(buttonId);
+            const text = document.getElementById(textId);
+            if (isLoading) {
+                button.disabled = true;
+                text.innerHTML = `<span class="loading-spinner"></span>${defaultText} 중...`;
+            } else {
+                button.disabled = false;
+                text.textContent = defaultText;
+            }
+        }
+
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const loginModal = document.getElementById('loginModal');
+            const signUpModal = document.getElementById('signUpModal');
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
+            if (event.target === signUpModal) {
+                closeSignUpModal();
+            }
+        }
+
+        async function clearChat() {
+            await fetch(`/api/chat/${sessionId}`, { method: 'DELETE' });
+            sessionId = crypto.randomUUID();
+            
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message assistant">
+                    <div class="message-bubble">
+                        안녕하세요! 저는 마음핏의 호랑이 코치입니다. 🐯<br>
+                        오늘 기분은 어떠신가요?
+                    </div>
+                </div>
+            `;
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage('user', message);
+            input.value = '';
+            setSendButtonState(false);
+            showTypingIndicator();
+
+            try {
+                isProcessing = true;
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        userMessage: message,
+                        lat: userLocation.lat,
+                        lng: userLocation.lng
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let currentBubble = null;
+                let currentContent = '';
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (!line.trim().startsWith('data:')) continue;
+                        const jsonStr = line.substring(5).trim();
+                        if (!jsonStr) continue;
+
+                        try {
+                            const json = JSON.parse(jsonStr);
+
+                            if (json.type === 'recommend' && json.vouchers) {
+                                hideTypingIndicator();
+                                addRecommendationMessage(json.message, json.vouchers);
+                                currentBubble = null;
+                                currentContent = '';
+                                loadRecommendations();
+                            } else if (json.type === 'home_workout' && json.videos) {
+                                hideTypingIndicator();
+                                addHomeWorkoutMessage(json.message, json.videos);
+                                currentBubble = null;
+                                currentContent = '';
+                                loadRecommendations();
+                            } else if (json.type === 'talk' && json.chunk) {
+                                if (!currentBubble) {
+                                    hideTypingIndicator();
+                                    currentBubble = createAssistantBubble();
+                                }
+                                currentContent += json.chunk;
+                                currentBubble.textContent = currentContent;
+                                scrollToBottom();
+                            }
+                        } catch (e) {}
+                    }
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('assistant', '오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                isProcessing = false;
+                setSendButtonState(true);
+                hideTypingIndicator();
+            }
+        }
+
+        function createAssistantBubble() {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+            return bubble;
+        }
+
+        function addMessage(role, content) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = content;
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function formatPrice(price) {
+            return price ? price.toLocaleString() + '원' : '가격 문의';
+        }
+
+        function formatDistance(distance) {
+            if (distance == null) return '';
+            return distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance}km`;
+        }
+
+        function addRecommendationMessage(message, vouchers) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble recommendation';
+
+            const voucherHTML = vouchers.map(v => `
+                <div class="voucher-item">
+                    <div class="voucher-header">
+                        <span class="voucher-name">${v.name}</span>
+                        <span class="voucher-category">${v.category}</span>
+                    </div>
+                    ${v.facilityName ? `<div class="voucher-facility">🏢 ${v.facilityName}</div>` : ''}
+                    <div class="voucher-desc">📍 ${v.description}${v.distance != null ? ` <span style="color:#667eea; font-weight:500;">(${formatDistance(v.distance)})</span>` : ''}</div>
+                    <div class="voucher-footer">
+                        <span class="voucher-price">${formatPrice(v.price)}</span>
+                        ${v.telephone ? `<span class="voucher-tel">📞 <a href="tel:${v.telephone}">${v.telephone}</a></span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            bubble.innerHTML = `
+                <div style="margin-bottom: 12px;">${message}</div>
+                <div style="font-weight:bold; color:#667eea; margin-bottom:8px;">🏃 추천 운동 시설</div>
+                ${voucherHTML}
+            `;
+
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addHomeWorkoutMessage(message, videos) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble recommendation';
+
+            if (!videos || videos.length === 0) {
+                bubble.innerHTML = `<div>${message || '운동을 추천해드릴게요!'}</div><div style="color:#666;">추천할 영상을 찾지 못했어요. 😅</div>`;
+            } else {
+                const items = videos.map(v => `
+                    <div class="video-item">
+                        <iframe class="video-frame" src="https://www.youtube.com/embed/${v.youtubeCode}" title="${v.title}" allowfullscreen></iframe>
+                        <div class="video-info"><div class="video-title">${v.title}</div></div>
+                    </div>
+                `).join('');
+
+                bubble.innerHTML = `
+                    <div style="margin-bottom: 12px;">${message || '집에서 할 수 있는 맞춤 운동을 추천해드릴게요!'}</div>
+                    <div style="font-weight:bold; color:#667eea; margin-bottom:8px;">🏠 추천 운동 영상</div>
+                    <div class="video-list">${items}</div>
+                `;
+            }
+
+            div.appendChild(bubble);
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            if (document.getElementById('typingIndicator')) return;
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            div.id = 'typingIndicator';
+            div.innerHTML = `<div class="message-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+            container.appendChild(div);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator')?.remove();
+        }
+
+        function setSendButtonState(enabled) {
+            document.getElementById('sendButton').disabled = !enabled;
+            document.getElementById('messageInput').disabled = !enabled;
+            if (enabled) document.getElementById('messageInput').focus();
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatMessages');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 추천 기록 로드
+        async function loadRecommendations() {
+            const listContainer = document.getElementById('recommendationsList');
+            const refreshBtn = document.getElementById('refreshBtn');
+            
+            if (!currentUser) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔐</div>
+                        <div>로그인하면 추천 기록을<br>확인할 수 있습니다</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                refreshBtn.disabled = true;
+                refreshBtn.style.opacity = '0.5';
+                
+                const [voucherRes, homeWorkoutRes] = await Promise.all([
+                    fetch('/api/recommendations/vouchers/my', { credentials: 'include' }),
+                    fetch('/api/recommendations/home-workouts/my', { credentials: 'include' })
+                ]);
+                
+                if (voucherRes.ok && homeWorkoutRes.ok) {
+                    const vouchers = await voucherRes.json();
+                    const homeWorkouts = await homeWorkoutRes.json();
+                    displayRecommendations(vouchers, homeWorkouts);
+                } else {
+                    listContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📝</div>
+                            <div>추천 기록을 불러올 수 없습니다</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('추천 기록 로드 실패:', error);
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div>오류가 발생했습니다</div>
+                    </div>
+                `;
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.style.opacity = '1';
+            }
+        }
+
+        // 추천 기록 표시
+        function displayRecommendations(vouchers, homeWorkouts) {
+            const listContainer = document.getElementById('recommendationsList');
+            
+            // 두 배열을 합치고 시간순 정렬
+            const allRecommendations = [
+                ...vouchers.map(v => ({ ...v, type: 'voucher' })),
+                ...homeWorkouts.map(h => ({ ...h, type: 'homeWorkout' }))
+            ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            if (!allRecommendations || allRecommendations.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div>아직 추천 기록이 없습니다</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            listContainer.innerHTML = allRecommendations.map(rec => {
+                const typeLabel = rec.type === 'voucher' ? '🏃 시설 추천' : '🏠 집 운동';
+                const typeClass = rec.type === 'voucher' ? 'voucher' : 'home-workout';
+                const time = formatTime(rec.createdAt);
+                const tags = rec.moodTags ? rec.moodTags.split(',').filter(t => t.trim()) : [];
+                
+                let contentHtml = '';
+                if (rec.type === 'homeWorkout') {
+                    // 집 운동의 경우 준비운동/본운동/정리운동으로 나눠서 표시
+                    const warmup = rec.warmupExercises || [];
+                    const main = rec.mainExercises || [];
+                    const coolDown = rec.coolDownExercises || [];
+                    const warmupVideos = rec.warmupVideos || [];
+                    const mainVideos = rec.mainVideos || [];
+                    const coolDownVideos = rec.coolDownVideos || [];
+                    
+                    contentHtml = `
+                        ${warmup.length > 0 ? `
+                            <div class="exercise-section">
+                                <div class="exercise-section-title">🔥 준비운동</div>
+                                <div class="exercise-list">
+                                    ${warmup.map((ex, i) => {
+                                        const video = warmupVideos[i];
+                                        return `<div class="exercise-list-item">• ${escapeHtml(ex)}${video ? ` <a href="https://youtube.com/watch?v=${video.youtubeCode}" target="_blank" class="video-link">📺</a>` : ''}</div>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${main.length > 0 ? `
+                            <div class="exercise-section">
+                                <div class="exercise-section-title">💪 본운동</div>
+                                <div class="exercise-list">
+                                    ${main.map((ex, i) => {
+                                        const video = mainVideos[i];
+                                        return `<div class="exercise-list-item">• ${escapeHtml(ex)}${video ? ` <a href="https://youtube.com/watch?v=${video.youtubeCode}" target="_blank" class="video-link">📺</a>` : ''}</div>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${coolDown.length > 0 ? `
+                            <div class="exercise-section">
+                                <div class="exercise-section-title">🧘 정리운동</div>
+                                <div class="exercise-list">
+                                    ${coolDown.map((ex, i) => {
+                                        const video = coolDownVideos[i];
+                                        return `<div class="exercise-list-item">• ${escapeHtml(ex)}${video ? ` <a href="https://youtube.com/watch?v=${video.youtubeCode}" target="_blank" class="video-link">📺</a>` : ''}</div>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    `;
+                } else {
+                    // 시설 추천의 경우 상세 정보 표시
+                    const voucherList = rec.vouchers || [];
+                    if (voucherList.length > 0) {
+                        contentHtml = `
+                            <div class="voucher-list">
+                                ${voucherList.map(v => `
+                                    <div class="voucher-item">
+                                        <div class="voucher-name">${escapeHtml(v.name)}</div>
+                                        <div class="voucher-detail">
+                                            <span class="voucher-category">${escapeHtml(v.category || '')}</span>
+                                            ${v.facilityName ? `<span class="voucher-facility">${escapeHtml(v.facilityName)}</span>` : ''}
+                                        </div>
+                                        ${v.price ? `<div class="voucher-price">₩${v.price.toLocaleString()}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        contentHtml = `<div class="recommendation-content">시설 정보 없음</div>`;
+                    }
+                }
+                
+                return `
+                    <div class="recommendation-item">
+                        <div class="recommendation-header">
+                            <span class="recommendation-type ${typeClass}">${typeLabel}</span>
+                            <span class="recommendation-time">${time}</span>
+                        </div>
+                        ${contentHtml}
+                        ${tags.length > 0 ? `
+                            <div class="recommendation-tags">
+                                ${tags.map(tag => `<span class="tag">${escapeHtml(tag.trim())}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 시간 포맷팅
+        function formatTime(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return '방금 전';
+            if (minutes < 60) return `${minutes}분 전`;
+            if (hours < 24) return `${hours}시간 전`;
+            if (days < 7) return `${days}일 전`;
+            
+            return date.toLocaleDateString('ko-KR', { 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // HTML 이스케이프
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

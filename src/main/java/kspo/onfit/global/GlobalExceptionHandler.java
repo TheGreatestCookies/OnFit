@@ -3,6 +3,7 @@ package kspo.onfit.global;
 import java.util.Map;
 import kspo.onfit.global.Exception.BadRequestException;
 import kspo.onfit.global.Exception.EntityDuplicateException;
+import kspo.onfit.global.Exception.EntityNotFoundException;
 import kspo.onfit.global.Exception.ForbiddenException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityDuplicateException.class)
     public ResponseEntity<Map<String,String>> handleEntityDuplicateException(EntityDuplicateException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getExceptionCode().getErrorMessage()));
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String,String>> handleEntityNotFoundException(EntityNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getExceptionCode().getErrorMessage()));
     }
 
 }
