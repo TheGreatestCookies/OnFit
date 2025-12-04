@@ -10,10 +10,11 @@ import java.util.List;
 public interface VoucherRepository extends JpaRepository<Voucher, Long> {
 
     /**
-     * 주어진 좌표에서 가까운 순으로 50개의 바우처 조회 (거리 포함)
+     * 주어진 좌표에서 가까운 순으로 50개의 바우처 조회 (시설 좌표 포함)
      */
     @Query(value = """
             SELECT v.id, v.name, v.facility_name, v.addr1, v.sports, v.price, v.telephone,
+                   ST_Y(v.location) AS lat, ST_X(v.location) AS lng,
                    ROUND(ST_Distance_Sphere(
                        v.location,
                        ST_SRID(POINT(:lng, :lat), 4326)

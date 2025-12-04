@@ -24,20 +24,8 @@ public class FitnessMeasureService {
             BigDecimal weight,
             BigDecimal bodyFatPercentage
     ) {
-        int minAge = age - 5;
-        int maxAge = age + 5;
-        BigDecimal minHeight = height.subtract(BigDecimal.valueOf(10));
-        BigDecimal maxHeight = height.add(BigDecimal.valueOf(10));
-        BigDecimal minWeight = weight.subtract(BigDecimal.valueOf(10));
-        BigDecimal maxWeight = weight.add(BigDecimal.valueOf(10));
-        BigDecimal minBodyFat = bodyFatPercentage.subtract(BigDecimal.valueOf(5));
-        BigDecimal maxBodyFat = bodyFatPercentage.add(BigDecimal.valueOf(5));
-
-        List<FitnessMeasure> similarData = fitnessMeasureRepository.findSimilarFitnessData(
-                minAge, maxAge,
-                minHeight, maxHeight,
-                minWeight, maxWeight,
-                minBodyFat, maxBodyFat
+        List<FitnessMeasure> similarData = fitnessMeasureRepository.findMostSimilarByBodyType(
+                age, height, weight, bodyFatPercentage
         );
 
         return similarData.stream()

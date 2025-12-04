@@ -16,6 +16,7 @@ public class ChatRequestDto {
     private String userMessage;
     private double lat;
     private double lng;
+    private Long memberId;
 
     @Getter
     @Builder
