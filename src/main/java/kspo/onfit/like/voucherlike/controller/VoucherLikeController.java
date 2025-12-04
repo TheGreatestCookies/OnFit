@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import kspo.onfit.like.voucherlike.service.VoucherLikeService;
+import kspo.onfit.member.domain.Member;
 import kspo.onfit.voucher.dto.VoucherResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.SessionAttribute;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,23 +27,29 @@ public class VoucherLikeController {
 
     private final VoucherLikeService voucherLikeService;
 
-    private final Long memberId = 2L;
-
     @Operation(summary = "이용권에 대한 좋아요 생성(누르기)")
     @PostMapping("/{voucherId}/like")
     public ResponseEntity<Void> createPostLike(
-            @PathVariable Long voucherId
+            @PathVariable Long voucherId,
+            @SessionAttribute(name = "loginMember", required = false) Member loginMember
     ) {
-        Long savedId = voucherLikeService.createVoucherLike(voucherId, memberId);
+        if (loginMember == null) {
+            return ResponseEntity.status(401).build();
+        }
+        Long savedId = voucherLikeService.createVoucherLike(voucherId, loginMember.getId());
         return ResponseEntity.created(URI.create(String.format("/api/vouchers/%d/like/%d", voucherId, savedId))).build();
     }
 
     @Operation(summary = "이용권에 대한 좋아요 취소(삭제)")
     @DeleteMapping("/{voucherId}/like")
     public ResponseEntity<Void> removeVoucherLike(
-            @PathVariable Long voucherId
+            @PathVariable Long voucherId,
+            @SessionAttribute(name = "loginMember", required = false) Member loginMember
     ){
-        voucherLikeService.removeVoucherLike(voucherId, memberId);
+        if (loginMember == null) {
+            return ResponseEntity.status(401).build();
+        }
+        voucherLikeService.removeVoucherLike(voucherId, loginMember.getId());
         return ResponseEntity.noContent().build();
     }
 
@@ -49,9 +57,13 @@ public class VoucherLikeController {
     @GetMapping("/like/my")
     public ResponseEntity<Page<VoucherResponseDto>> getMyVoucherLikeList(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "5") int size,
+            @SessionAttribute(name = "loginMember", required = false) Member loginMember
     ){
-        Page<VoucherResponseDto> pagedList = voucherLikeService.getMyVoucherLikeList(memberId, PageRequest.of(page, size));
+        if (loginMember == null) {
+            return ResponseEntity.status(401).build();
+        }
+        Page<VoucherResponseDto> pagedList = voucherLikeService.getMyVoucherLikeList(loginMember.getId(), PageRequest.of(page, size));
         return ResponseEntity.ok(pagedList);
     }
 
