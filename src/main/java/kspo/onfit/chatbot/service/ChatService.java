@@ -244,7 +244,7 @@ public class ChatService {
             return result;
         }
 
-        List<Long> targetIds = voucherIds.stream().map(Number::longValue).collect(Collectors.toList());
+        List<Long> targetIds = voucherNumbers.stream().map(Number::longValue).collect(Collectors.toList());
         List<VoucherInfoDto> recommendedVouchers = voucherInfos.stream()
                 .filter(v -> targetIds.contains(v.id()))
                 .collect(Collectors.toList());

@@ -26,13 +26,13 @@ public class ChatController {
             @SessionAttribute(name = "loginMember", required = false) Member loginMember) {
         
         Long memberId = loginMember != null ? loginMember.getId() : null;
-        ChatRequestDto requestWithMember = ChatRequestDto.builder()
-                .sessionId(request.getSessionId())
-                .userMessage(request.getUserMessage())
-                .lat(request.getLat())
-                .lng(request.getLng())
-                .memberId(memberId)
-                .build();
+        ChatRequestDto requestWithMember = new ChatRequestDto(
+                request.sessionId(),
+                request.userMessage(),
+                request.lat(),
+                request.lng(),
+                memberId
+        );
         
         return chatService.chatStream(requestWithMember)
                 .map(json -> ServerSentEvent.<String>builder()

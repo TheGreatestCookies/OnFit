@@ -6,7 +6,8 @@ public record ChatRequestDto(
         String sessionId,
         String userMessage,
         double lat,
-        double lng
+        double lng,
+        Long memberId
 ) {
     public record MessageDto(
             String role,
