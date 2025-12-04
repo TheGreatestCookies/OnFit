@@ -64,7 +64,7 @@ public class OpenAiClient {
     private Map<String, Object> buildRequest(List<ChatRequestDto.MessageDto> messages,
             List<VoucherInfoDto> voucherInfos, boolean includeTools) {
         long userMessageCount = messages.stream()
-                .filter(m -> "user".equals(m.getRole()))
+                .filter(m -> "user".equals(m.role()))
                 .count();
 
         String systemPrompt = buildSystemPrompt(voucherInfos, userMessageCount);
@@ -74,15 +74,15 @@ public class OpenAiClient {
 
         for (ChatRequestDto.MessageDto msg : messages) {
             Map<String, Object> messageMap = new HashMap<>();
-            messageMap.put("role", msg.getRole());
-            messageMap.put("content", msg.getContent());
+            messageMap.put("role", msg.role());
+            messageMap.put("content", msg.content());
             
-            if (msg.getToolCallId() != null) {
-                messageMap.put("tool_call_id", msg.getToolCallId());
+            if (msg.toolCallId() != null) {
+                messageMap.put("tool_call_id", msg.toolCallId());
             }
             
-            if (msg.getToolCalls() != null) {
-                messageMap.put("tool_calls", msg.getToolCalls());
+            if (msg.toolCalls() != null) {
+                messageMap.put("tool_calls", msg.toolCalls());
             }
             
             messageList.add(messageMap);
@@ -354,10 +354,10 @@ public class OpenAiClient {
             if (count >= 50)
                 break;
             prompt.append(String.format("- ID %d: [%s] %s - 위치: %s\n",
-                    voucher.getId(),
-                    voucher.getCategory(),
-                    voucher.getName(),
-                    voucher.getDescription()));
+                    voucher.id(),
+                    voucher.category(),
+                    voucher.name(),
+                    voucher.description()));
             count++;
         }
 

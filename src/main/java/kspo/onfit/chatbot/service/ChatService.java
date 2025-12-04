@@ -31,15 +31,15 @@ public class ChatService {
     private static final int MAX_TOOL_CALL_DEPTH = 5;
 
     public Flux<String> chatStream(ChatRequestDto request) {
-        String sessionId = request.getSessionId();
-        String userMessage = request.getUserMessage();
+        String sessionId = request.sessionId();
+        String userMessage = request.userMessage();
 
         List<ChatRequestDto.MessageDto> messages = sessionStore.computeIfAbsent(
                 sessionId, k -> new ArrayList<>());
 
         messages.add(ChatRequestDto.MessageDto.user(userMessage));
 
-        List<VoucherInfoDto> voucherInfos = getVoucherInfos(request.getLat(), request.getLng());
+        List<VoucherInfoDto> voucherInfos = getVoucherInfos(request.lat(), request.lng());
 
         return processChatWithChaining(sessionId, messages, voucherInfos, 0);
     }
@@ -119,14 +119,11 @@ public class ChatService {
             List<Flux<String>> responseFluxes = new ArrayList<>();
 
             List<ChatRequestDto.ToolCallDto> toolCallDtos = toolCalls.stream()
-                    .map(tc -> ChatRequestDto.ToolCallDto.builder()
-                            .id(tc.id)
-                            .type("function")
-                            .function(ChatRequestDto.FunctionDto.builder()
-                                    .name(tc.name)
-                                    .arguments(tc.arguments)
-                                    .build())
-                            .build())
+                    .map(tc -> ChatRequestDto.ToolCallDto.of(
+                            tc.id,
+                            "function",
+                            ChatRequestDto.FunctionDto.of(tc.name, tc.arguments)
+                    ))
                     .collect(Collectors.toList());
             messages.add(ChatRequestDto.MessageDto.assistantToolCall(toolCallDtos));
 
@@ -235,7 +232,7 @@ public class ChatService {
 
         List<Long> targetIds = voucherIds.stream().map(Number::longValue).collect(Collectors.toList());
         List<VoucherInfoDto> recommendedVouchers = voucherInfos.stream()
-                .filter(v -> targetIds.contains(v.getId()))
+                .filter(v -> targetIds.contains(v.id()))
                 .collect(Collectors.toList());
 
         result.immediateResponse = objectMapper.writeValueAsString(Map.of(
@@ -294,7 +291,7 @@ public class ChatService {
 
         StringBuilder text = new StringBuilder("운동처방:\n\n");
         for (int i = 0; i < Math.min(prescriptions.size(), 3); i++) {
-            text.append(String.format("%d. %s\n\n", i + 1, prescriptions.get(i).getPrescription()));
+            text.append(String.format("%d. %s\n\n", i + 1, prescriptions.get(i).prescription()));
         }
 
         result.toolResponse = text +
@@ -320,16 +317,16 @@ public class ChatService {
         List<Object[]> results = voucherRepository.findNearestVouchersWithDistance(lat, lng);
 
         return results.stream()
-                .<VoucherInfoDto>map(row -> VoucherInfoDto.builder()
-                        .id(((Number) row[0]).longValue())
-                        .name((String) row[1])
-                        .facilityName((String) row[2])
-                        .description((String) row[2] + " - " + row[3])
-                        .category((String) row[4])
-                        .price(row[5] != null ? ((Number) row[5]).intValue() : null)
-                        .telephone((String) row[6])
-                        .distance(row[7] != null ? ((Number) row[7]).doubleValue() : null)
-                        .build())
+                .<VoucherInfoDto>map(row -> VoucherInfoDto.of(
+                        ((Number) row[0]).longValue(),
+                        (String) row[1],
+                        (String) row[2] + " - " + row[3],
+                        (String) row[4],
+                        row[5] != null ? ((Number) row[5]).intValue() : null,
+                        (String) row[6],
+                        (String) row[2],
+                        row[7] != null ? ((Number) row[7]).doubleValue() : null
+                ))
                 .collect(Collectors.toList());
     }
 

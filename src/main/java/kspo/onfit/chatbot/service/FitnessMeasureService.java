@@ -41,13 +41,13 @@ public class FitnessMeasureService {
         );
 
         return similarData.stream()
-                .map(data -> FitnessPrescriptionDto.builder()
-                        .age(data.getMesureAgeCo())
-                        .height(data.getHeight())
-                        .weight(data.getWeight())
-                        .bodyFatPercentage(data.getBodyFatPercentage())
-                        .prescription(data.getMvmPrscrptnCn())
-                        .build())
+                .map(data -> FitnessPrescriptionDto.of(
+                        data.getMesureAgeCo(),
+                        data.getHeight(),
+                        data.getWeight(),
+                        data.getBodyFatPercentage(),
+                        data.getMvmPrscrptnCn()
+                ))
                 .collect(Collectors.toList());
     }
 }
