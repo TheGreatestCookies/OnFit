@@ -6,8 +6,10 @@ import kspo.onfit.chatbot.domain.HomeWorkoutRecommendationLog;
 import kspo.onfit.chatbot.domain.VoucherRecommendationLog;
 import kspo.onfit.chatbot.dto.HomeWorkoutRecommendationResponseDto;
 import kspo.onfit.chatbot.dto.VoucherRecommendationResponseDto;
+import kspo.onfit.chatbot.dto.VoucherInfoDto;
 import kspo.onfit.chatbot.repository.HomeWorkoutRecommendationLogRepository;
 import kspo.onfit.chatbot.repository.VoucherRecommendationLogRepository;
+import kspo.onfit.like.voucherlike.service.VoucherLikeLowService;
 import kspo.onfit.member.domain.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ public class RecommendationLogController {
 
     private final VoucherRecommendationLogRepository voucherRecommendationLogRepository;
     private final HomeWorkoutRecommendationLogRepository homeWorkoutRecommendationLogRepository;
+    private final VoucherLikeLowService voucherLikeLowService;
 
     @GetMapping("/vouchers/my")
     @Operation(summary = "내 시설 추천 기록 조회", description = "로그인한 사용자의 시설 추천 기록을 조회합니다.")
@@ -34,7 +37,29 @@ public class RecommendationLogController {
         }
         List<VoucherRecommendationLog> logs = voucherRecommendationLogRepository.findByMemberIdOrderByCreatedAtDesc(loginMember.getId());
         List<VoucherRecommendationResponseDto> response = logs.stream()
-                .map(VoucherRecommendationResponseDto::from)
+                .map(log -> {
+                    VoucherRecommendationResponseDto dto = VoucherRecommendationResponseDto.from(log);
+                    // 각 바우처의 최신 좋아요 수 조회 및 업데이트
+                    List<VoucherInfoDto> updatedVouchers = dto.getVouchers().stream()
+                            .map(voucher -> VoucherInfoDto.of(
+                                    voucher.id(),
+                                    voucher.name(),
+                                    voucher.description(),
+                                    voucher.category(),
+                                    voucher.price(),
+                                    voucher.telephone(),
+                                    voucher.facilityName(),
+                                    voucher.distance(),
+                                    voucherLikeLowService.countVoucherLikeByVoucherId(voucher.id())
+                            ))
+                            .collect(Collectors.toList());
+                    return VoucherRecommendationResponseDto.builder()
+                            .id(dto.getId())
+                            .vouchers(updatedVouchers)
+                            .moodTags(dto.getMoodTags())
+                            .createdAt(dto.getCreatedAt())
+                            .build();
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
