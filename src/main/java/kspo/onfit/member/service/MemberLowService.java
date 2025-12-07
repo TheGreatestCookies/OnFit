@@ -19,6 +19,11 @@ public class MemberLowService {
         return memberRepository.getReferenceById(id);
     }
 
+    @Transactional(readOnly = true)
+    public Member findById(Long id) {
+        return memberRepository.findById(id).orElse(null);
+    }
+
     public Member save(Member member) {
         return memberRepository.save(member);
     }

@@ -28,4 +28,8 @@ public class Member {
 
     Integer profileImageNumber;
 
+    public void updateProfileImageNumber(Integer profileImageNumber) {
+        this.profileImageNumber = profileImageNumber;
+    }
+
 }
