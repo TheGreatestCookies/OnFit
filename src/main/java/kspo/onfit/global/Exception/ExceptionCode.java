@@ -17,7 +17,7 @@ public enum ExceptionCode {
     MEMBER_EMAIL_DUPLICATE("이미 사용 중인 이메일입니다."),
     MEMBER_NOT_FOUND("회원을 찾을 수 없습니다."),
     MEMBER_PASSWORD_INVALID("비밀번호가 일치하지 않습니다."),
-    MEMBER_PROFILE_IMAGE_INVALID("프로필 이미지는 1번부터 5번까지 선택 가능합니다.");
+    MEMBER_PROFILE_IMAGE_INVALID("프로필 이미지는 1번부터 6번까지 선택 가능합니다.");
 
     private final String errorMessage;
 
