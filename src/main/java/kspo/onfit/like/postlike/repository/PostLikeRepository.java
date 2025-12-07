@@ -13,7 +13,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     boolean existsPostLikeByPostIdAndMemberId(Long postId, Long memberId);
 
     @Query(
-            value = "select pl from PostLike pl join fetch pl.member join fetch pl.post where pl.member.id = :memberId",
+            value = "select pl from PostLike pl join fetch pl.post p join fetch p.member where pl.member.id = :memberId",
             countQuery = "select count(pl) from PostLike pl where pl.member.id = :memberId"
     )
     Page<PostLike> findPostLikeByMemberId(Long memberId, Pageable pageable);
