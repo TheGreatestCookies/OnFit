@@ -9,7 +9,8 @@ public record VoucherInfoDto(
         String telephone,
         String facilityName,
         Double distance,
-        Long likeCount
+        Long likeCount,
+        Boolean myLike
 ) {
     public static VoucherInfoDto of(
             Long id,
@@ -20,8 +21,9 @@ public record VoucherInfoDto(
             String telephone,
             String facilityName,
             Double distance,
-            Long likeCount
+            Long likeCount,
+            Boolean myLike
     ) {
-        return new VoucherInfoDto(id, name, description, category, price, telephone, facilityName, distance, likeCount);
+        return new VoucherInfoDto(id, name, description, category, price, telephone, facilityName, distance, likeCount, myLike);
     }
 }

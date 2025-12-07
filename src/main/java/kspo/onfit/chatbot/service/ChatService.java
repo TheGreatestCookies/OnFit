@@ -465,7 +465,8 @@ public class ChatService {
                         (String) row[6],
                         (String) row[2],
                         row[7] != null ? ((Number) row[7]).doubleValue() : null,
-                        likeCount
+                        likeCount,
+                        null  // myLike는 챗봇 추천 시에는 불필요하므로 null
                     );
                 })
                 .collect(Collectors.toList());

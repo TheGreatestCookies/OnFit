@@ -39,7 +39,7 @@ public class RecommendationLogController {
         List<VoucherRecommendationResponseDto> response = logs.stream()
                 .map(log -> {
                     VoucherRecommendationResponseDto dto = VoucherRecommendationResponseDto.from(log);
-                    // 각 바우처의 최신 좋아요 수 조회 및 업데이트
+                    // 각 바우처의 최신 좋아요 수 및 내 좋아요 여부 조회 및 업데이트
                     List<VoucherInfoDto> updatedVouchers = dto.getVouchers().stream()
                             .map(voucher -> VoucherInfoDto.of(
                                     voucher.id(),
@@ -50,7 +50,8 @@ public class RecommendationLogController {
                                     voucher.telephone(),
                                     voucher.facilityName(),
                                     voucher.distance(),
-                                    voucherLikeLowService.countVoucherLikeByVoucherId(voucher.id())
+                                    voucherLikeLowService.countVoucherLikeByVoucherId(voucher.id()),
+                                    voucherLikeLowService.existsVoucherLikeByVoucherIdAndMemberId(voucher.id(), loginMember.getId())
                             ))
                             .collect(Collectors.toList());
                     return VoucherRecommendationResponseDto.builder()
