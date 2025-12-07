@@ -44,6 +44,11 @@ public class ChatService {
         String sessionId = request.sessionId();
         String userMessage = request.userMessage();
 
+        // 로그인한 사용자의 memberId를 세션에 저장
+        if (request.memberId() != null) {
+            sessionMemberStore.put(sessionId, request.memberId());
+        }
+
         List<ChatRequestDto.MessageDto> messages = sessionStore.computeIfAbsent(
                 sessionId, k -> new ArrayList<>());
 
