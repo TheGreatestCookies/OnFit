@@ -129,7 +129,7 @@ public class OpenAiClient {
 
         Map<String, Object> recommendFunc = new HashMap<>();
         recommendFunc.put("name", "recommend_voucher_facilities");
-        recommendFunc.put("description", "사용자에게 운동 시설(바우처)을 추천할 때 사용합니다. 추천 메시지와 추천할 시설의 순번 목록을 전달합니다.");
+        recommendFunc.put("description", "사용자에게 운동 시설(바우처)을 추천할 때 사용합니다. 추천 메시지와 추천할 시설의 ID 목록을 전달합니다.");
 
         Map<String, Object> recommendParams = new HashMap<>();
         recommendParams.put("type", "object");
@@ -139,7 +139,7 @@ public class OpenAiClient {
         recommendProps.put("voucher_numbers", Map.of(
                 "type", "array",
                 "items", Map.of("type", "integer"),
-                "description", "추천할 운동 시설의 순번 목록 (시스템 프롬프트에 제공된 1번부터 시작하는 순번 중 선택, 최소 1개 이상 최대 3개)"));
+                "description", "추천할 운동 시설의 ID 목록 (시스템 프롬프트에 'ID N:'으로 표시된 번호를 그대로 사용, 최소 1개 이상 최대 3개). 예: ID 8이면 8을 넣으세요."));
         recommendProps.put("mood_tags", Map.of(
                 "type", "array",
                 "items", Map.of("type", "string"),
@@ -308,9 +308,9 @@ public class OpenAiClient {
         prompt.append("   - ❌ 단계 1에서 절대 호출 금지\n");
         prompt.append("   - ❌ '간단한 운동', '집에서 할 운동', '스트레칭' 추천 요청에는 절대 이 함수를 사용하지 마세요.\n");
         prompt.append("   - 사용자가 명시적으로 '시설', '센터', '바우처', '헬스장' 등을 찾을 때만 호출하세요.\n");
-        prompt.append("   - 인자: message (추천 멘트), voucher_numbers (추천할 시설 순번 목록, 최소 1개 이상 최대 3개로 제한)\n");
+        prompt.append("   - 인자: message (추천 멘트), voucher_numbers (추천할 시설 ID 목록, 최소 1개 이상 최대 3개로 제한)\n");
         prompt.append("   - 🚨 필수: voucher_numbers는 반드시 최소 1개 이상, 최대 3개 이하로만 선택하세요. 빈 배열은 절대 안 됩니다.\n");
-        prompt.append("   - 🚨 필수: 순번은 아래 목록의 1번부터 시작하는 번호입니다. (예: 1, 2, 3)\n");
+        prompt.append("   - 🚨 필수: ID는 아래 목록의 'ID N:' 형식으로 표시된 숫자입니다. (예: ID 8이면 8)\n");
         prompt.append("   - 🚨 필수: 함수 호출 후 시스템이 자동으로 GPT를 다시 호출합니다. 반드시 \"부담스럽다면 집에서 할 수 있는 간단한 운동도 추천해줄까?\"라고 물어보세요.\n\n");
         
         prompt.append("2. get_fitness_prescription: 단계 3에서만 사용 - '집에서 할 수 있는 운동', '맨몸 운동', '간단한 스트레칭'을 추천할 때 사용합니다.\n");
@@ -376,7 +376,7 @@ public class OpenAiClient {
 
         prompt.append("추천 가능한 운동 시설 목록 (최대 50개) [사용자로부터 가까운 순으로 정렬된 목록입니다.]:\n");
         prompt.append("※ 각 운동의 시설명과 위치 정보를 참고하여 사용자의 기분과 선호도에 맞게 추천하세요.\n");
-        prompt.append("※ 아래 순번(1, 2, 3...)을 voucher_numbers에 사용하세요. 내부 ID는 노출하지 마세요.\n\n");
+        prompt.append("※ 아래 'ID N:' 형식의 숫자를 voucher_numbers에 그대로 사용하세요.\n\n");
         int count = 0;
         for (VoucherInfoDto voucher : voucherInfos) {
             if (count >= 50)
