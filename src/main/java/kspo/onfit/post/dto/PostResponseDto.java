@@ -49,9 +49,9 @@ public record PostResponseDto(
                 postLike.getPost().getCreatedAt(),
                 imageUrls,
 
-                postLike.getMember().getId(),
-                postLike.getMember().getName(),
-                postLike.getMember().getProfileImageNumber(),
+                postLike.getPost().getMember().getId(),
+                postLike.getPost().getMember().getName(),
+                postLike.getPost().getMember().getProfileImageNumber(),
 
                 likeCnt,
                 myLike
