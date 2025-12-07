@@ -2,6 +2,7 @@ package kspo.onfit.chatbot.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kspo.onfit.chatbot.dto.CharacterPersona;
 import kspo.onfit.chatbot.dto.ChatRequestDto;
 import kspo.onfit.chatbot.dto.ChatRequestDto.MessageDto;
 import kspo.onfit.chatbot.dto.VoucherInfoDto;
@@ -32,13 +33,13 @@ public class OpenAiClient {
     }
 
     public Flux<String> streamChatResponse(List<ChatRequestDto.MessageDto> messages,
-            List<VoucherInfoDto> voucherInfos) {
-        return streamChatResponseInternal(messages, voucherInfos);
+            List<VoucherInfoDto> voucherInfos, Integer profileImageNumber) {
+        return streamChatResponseInternal(messages, voucherInfos, profileImageNumber);
     }
 
     private Flux<String> streamChatResponseInternal(List<MessageDto> messages,
-            List<VoucherInfoDto> voucherInfos) {
-        Map<String, Object> request = buildRequest(messages, voucherInfos);
+            List<VoucherInfoDto> voucherInfos, Integer profileImageNumber) {
+        Map<String, Object> request = buildRequest(messages, voucherInfos, profileImageNumber);
 
         return openAiWebClient.post()
                 .uri("/chat/completions")
@@ -58,12 +59,12 @@ public class OpenAiClient {
     }
 
     private Map<String, Object> buildRequest(List<MessageDto> messages,
-            List<VoucherInfoDto> voucherInfos) {
+            List<VoucherInfoDto> voucherInfos, Integer profileImageNumber) {
         long userMessageCount = messages.stream()
                 .filter(m -> "user".equals(m.role()))
                 .count();
 
-        String systemPrompt = buildSystemPrompt(voucherInfos, userMessageCount);
+        String systemPrompt = buildSystemPrompt(voucherInfos, userMessageCount, profileImageNumber);
 
         List<Map<String, Object>> messageList = new ArrayList<>();
         messageList.add(Map.of("role", "system", "content", systemPrompt));
@@ -138,7 +139,7 @@ public class OpenAiClient {
         recommendProps.put("voucher_numbers", Map.of(
                 "type", "array",
                 "items", Map.of("type", "integer"),
-                "description", "추천할 운동 시설의 순번 목록 (시스템 프롬프트에 제공된 1번부터 시작하는 순번 중 선택, 최대 3개)"));
+                "description", "추천할 운동 시설의 순번 목록 (시스템 프롬프트에 제공된 1번부터 시작하는 순번 중 선택, 최소 1개 이상 최대 3개)"));
         recommendProps.put("mood_tags", Map.of(
                 "type", "array",
                 "items", Map.of("type", "string"),
@@ -256,12 +257,28 @@ public class OpenAiClient {
         }
     }
 
-    private String buildSystemPrompt(List<VoucherInfoDto> voucherInfos, long userMessageCount) {
+    private String buildSystemPrompt(List<VoucherInfoDto> voucherInfos, long userMessageCount, Integer profileImageNumber) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("당신은 마음핏이라는 서비스의 소속인 호랑이 캐릭터로, 사용자의 건강한 삶을 응원하는 활기찬 친구입니다.\n\n");
-        prompt.append("캐릭터 설정:\n");
-        prompt.append("- 마음핏의 호랑이 캐릭터로서 친근하고 밝고 활기찬 성격\n");
-        prompt.append("- 호랑이답게 당당하면서도 친근하고 다정한 말투\n");
+        
+        // 캐릭터 페르소나 적용
+        CharacterPersona persona = CharacterPersona.fromProfileImage(profileImageNumber);
+        
+        prompt.append(String.format("당신은 마음핏이라는 서비스의 소속인 '%s' 캐릭터로, 사용자의 건강한 삶을 응원하는 친구입니다.\n\n", persona.getName()));
+        
+        prompt.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+        prompt.append("🎭 캐릭터 페르소나 (반드시 준수)\n");
+        prompt.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+        
+        prompt.append(String.format("【캐릭터 이름】: %s\n\n", persona.getName()));
+        prompt.append(String.format("【성격】:\n%s\n\n", persona.getPersonality()));
+        prompt.append(String.format("【말투 특징】:\n%s\n\n", persona.getToneDescription()));
+        prompt.append(String.format("【상세 가이드라인】:\n%s\n\n", persona.getSystemPrompt()));
+        
+        prompt.append("🚨 중요: 위 캐릭터 설정을 반드시 모든 대화에서 일관되게 유지하세요.\n\n");
+        prompt.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n");
+        
+        prompt.append("캐릭터 역할:\n");
+        prompt.append("- 마음핏 서비스의 챗봇으로서 친근하고 밝은 성격\n");
         prompt.append("- 국민의 건강과 행복을 응원하는 사명감\n");
         prompt.append("- 바우처와 집에서 할 수 있는 간단한 운동을 알려줌으로써 사용자의 마음을 해소해주는 마음핏 서비스의 챗봇\n");
         prompt.append("- ⚠️ 주의: 사용자를 우울하거나 부정적인 상태로 단정 짓지 마세요. 친구처럼 대화하며 동기를 부여해주세요.\n\n");
@@ -291,8 +308,8 @@ public class OpenAiClient {
         prompt.append("   - ❌ 단계 1에서 절대 호출 금지\n");
         prompt.append("   - ❌ '간단한 운동', '집에서 할 운동', '스트레칭' 추천 요청에는 절대 이 함수를 사용하지 마세요.\n");
         prompt.append("   - 사용자가 명시적으로 '시설', '센터', '바우처', '헬스장' 등을 찾을 때만 호출하세요.\n");
-        prompt.append("   - 인자: message (추천 멘트), voucher_numbers (추천할 시설 순번 목록, 최대 3개로 제한)\n");
-        prompt.append("   - 🚨 필수: voucher_numbers는 반드시 3개 이하로만 선택하세요. 3개를 초과하면 안 됩니다.\n");
+        prompt.append("   - 인자: message (추천 멘트), voucher_numbers (추천할 시설 순번 목록, 최소 1개 이상 최대 3개로 제한)\n");
+        prompt.append("   - 🚨 필수: voucher_numbers는 반드시 최소 1개 이상, 최대 3개 이하로만 선택하세요. 빈 배열은 절대 안 됩니다.\n");
         prompt.append("   - 🚨 필수: 순번은 아래 목록의 1번부터 시작하는 번호입니다. (예: 1, 2, 3)\n");
         prompt.append("   - 🚨 필수: 함수 호출 후 시스템이 자동으로 GPT를 다시 호출합니다. 반드시 \"부담스럽다면 집에서 할 수 있는 간단한 운동도 추천해줄까?\"라고 물어보세요.\n\n");
         

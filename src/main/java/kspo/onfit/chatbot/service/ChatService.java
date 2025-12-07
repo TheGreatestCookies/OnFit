@@ -8,6 +8,7 @@ import kspo.onfit.chatbot.dto.ChatRequestDto;
 import kspo.onfit.chatbot.dto.VoucherInfoDto;
 import kspo.onfit.chatbot.repository.HomeWorkoutRecommendationLogRepository;
 import kspo.onfit.chatbot.repository.VoucherRecommendationLogRepository;
+import kspo.onfit.like.voucherlike.service.VoucherLikeLowService;
 import kspo.onfit.member.domain.Member;
 import kspo.onfit.member.repository.MemberRepository;
 import kspo.onfit.voucher.repository.VoucherRepository;
@@ -34,19 +35,27 @@ public class ChatService {
     private final VoucherRecommendationLogRepository voucherRecommendationLogRepository;
     private final HomeWorkoutRecommendationLogRepository homeWorkoutRecommendationLogRepository;
     private final MemberRepository memberRepository;
+    private final VoucherLikeLowService voucherLikeLowService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<String, List<ChatRequestDto.MessageDto>> sessionStore = new ConcurrentHashMap<>();
     private final Map<String, Long> sessionMemberStore = new ConcurrentHashMap<>();
+    private final Map<String, Integer> sessionProfileImageStore = new ConcurrentHashMap<>();
     private static final int MAX_TOOL_CALL_DEPTH = 5;
 
     public Flux<String> chatStream(ChatRequestDto request) {
         String sessionId = request.sessionId();
         String userMessage = request.userMessage();
 
-        // 로그인한 사용자의 memberId를 세션에 저장
+        // 로그인한 사용자의 memberId와 프로필 이미지 번호를 세션에 저장
         if (request.memberId() != null) {
             sessionMemberStore.put(sessionId, request.memberId());
+            
+            // 프로필 이미지 번호 조회 및 저장
+            Member member = memberRepository.findById(request.memberId()).orElse(null);
+            if (member != null && member.getProfileImageNumber() != null) {
+                sessionProfileImageStore.put(sessionId, member.getProfileImageNumber());
+            }
         }
 
         List<ChatRequestDto.MessageDto> messages = sessionStore.computeIfAbsent(
@@ -68,8 +77,11 @@ public class ChatService {
         }
 
         StreamState state = new StreamState();
+        
+        // 세션에서 프로필 이미지 번호 조회
+        Integer profileImageNumber = sessionProfileImageStore.get(sessionId);
 
-        return openAiClient.streamChatResponse(messages, voucherInfos)
+        return openAiClient.streamChatResponse(messages, voucherInfos, profileImageNumber)
                 .scan(state, (s, chunk) -> {
                     if (chunk.startsWith("__TOOL_CALL__:")) {
                         s.isToolCall = true;
@@ -344,6 +356,7 @@ public class ChatService {
     public void clearSession(String sessionId) {
         sessionStore.remove(sessionId);
         sessionMemberStore.remove(sessionId);
+        sessionProfileImageStore.remove(sessionId);
     }
 
     private void saveVoucherRecommendationLog(String sessionId, List<VoucherInfoDto> vouchers, List<String> moodTags) {
@@ -439,16 +452,23 @@ public class ChatService {
         List<Object[]> results = voucherRepository.findNearestVouchersWithDistance(lat, lng);
 
         return results.stream()
-                .<VoucherInfoDto>map(row -> VoucherInfoDto.of(
-                        ((Number) row[0]).longValue(),
+                .<VoucherInfoDto>map(row -> {
+                    Long voucherId = ((Number) row[0]).longValue();
+                    Long likeCount = voucherLikeLowService.countVoucherLikeByVoucherId(voucherId);
+                    
+                    return VoucherInfoDto.of(
+                        voucherId,
                         (String) row[1],
                         (String) row[2] + " - " + row[3],
                         (String) row[4],
                         row[5] != null ? ((Number) row[5]).intValue() : null,
                         (String) row[6],
                         (String) row[2],
-                        row[7] != null ? ((Number) row[7]).doubleValue() : null
-                ))
+                        row[7] != null ? ((Number) row[7]).doubleValue() : null,
+                        likeCount,
+                        null  // myLike는 챗봇 추천 시에는 불필요하므로 null
+                    );
+                })
                 .collect(Collectors.toList());
     }
 

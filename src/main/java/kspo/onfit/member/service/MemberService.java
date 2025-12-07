@@ -28,7 +28,7 @@ public class MemberService {
         }
 
         Integer profileImageNumber = request.profileImageNumber();
-        if (profileImageNumber < 1 || profileImageNumber > 5) {
+        if (profileImageNumber < 1 || profileImageNumber > 6) {
             throw new BadRequestException(ExceptionCode.MEMBER_PROFILE_IMAGE_INVALID);
         }
 
@@ -63,6 +63,22 @@ public class MemberService {
         if (session != null) {
             session.invalidate();
         }
+    }
+
+    public MemberResponse updateProfileImage(Member loginMember, Integer profileImageNumber) {
+        if (profileImageNumber < 1 || profileImageNumber > 6) {
+            throw new BadRequestException(ExceptionCode.MEMBER_PROFILE_IMAGE_INVALID);
+        }
+
+        Member member = memberLowService.getReferenceById(loginMember.getId());
+        member.updateProfileImageNumber(profileImageNumber);
+
+        return MemberResponse.from(member, member.getProfileImageNumber());
+    }
+
+    @Transactional(readOnly = true)
+    public Member findById(Long id) {
+        return memberLowService.findById(id);
     }
 }
 
