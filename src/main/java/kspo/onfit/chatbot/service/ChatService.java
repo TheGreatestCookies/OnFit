@@ -12,6 +12,7 @@ import kspo.onfit.like.voucherlike.service.VoucherLikeLowService;
 import kspo.onfit.member.domain.Member;
 import kspo.onfit.member.repository.MemberRepository;
 import kspo.onfit.voucher.repository.VoucherRepository;
+import kspo.onfit.voucher.service.VoucherService;
 import kspo.onfit.video.domain.FitnessVideo;
 import kspo.onfit.video.repository.FitnessVideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class ChatService {
     private final HomeWorkoutRecommendationLogRepository homeWorkoutRecommendationLogRepository;
     private final MemberRepository memberRepository;
     private final VoucherLikeLowService voucherLikeLowService;
+    private final VoucherService voucherService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<String, List<ChatRequestDto.MessageDto>> sessionStore = new ConcurrentHashMap<>();
@@ -63,7 +65,7 @@ public class ChatService {
 
         messages.add(ChatRequestDto.MessageDto.user(userMessage));
 
-        List<VoucherInfoDto> voucherInfos = getVoucherInfos(request.lat(), request.lng());
+        List<VoucherInfoDto> voucherInfos = getVoucherInfos(request.lat(), request.lng(), request.memberId());
 
         return processChatWithChaining(sessionId, messages, voucherInfos, 0);
     }
@@ -448,13 +450,25 @@ public class ChatService {
         }
     }
 
-    private List<VoucherInfoDto> getVoucherInfos(double lat, double lng) {
+    private List<VoucherInfoDto> getVoucherInfos(double lat, double lng, Long memberId) {
         List<Object[]> results = voucherRepository.findNearestVouchersWithDistance(lat, lng);
+
+        // 로그인한 사용자의 좋아요 목록 조회
+        List<Long> likedVoucherIds;
+        if (memberId == null) {
+            likedVoucherIds = List.of();
+        } else {
+            likedVoucherIds = voucherLikeLowService.findVoucherLikeByMemberId(memberId)
+                    .stream()
+                    .map(voucherLike -> voucherLike.getVoucher().getId())
+                    .toList();
+        }
 
         return results.stream()
                 .<VoucherInfoDto>map(row -> {
                     Long voucherId = ((Number) row[0]).longValue();
-                    Long likeCount = voucherLikeLowService.countVoucherLikeByVoucherId(voucherId);
+                    Long likeCount = voucherService.countVoucherLikes(voucherId);
+                    Boolean myLike = likedVoucherIds.contains(voucherId);
                     
                     return VoucherInfoDto.of(
                         voucherId,
@@ -466,7 +480,7 @@ public class ChatService {
                         (String) row[2],
                         row[7] != null ? ((Number) row[7]).doubleValue() : null,
                         likeCount,
-                        null  // myLike는 챗봇 추천 시에는 불필요하므로 null
+                        myLike
                     );
                 })
                 .collect(Collectors.toList());
